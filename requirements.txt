@@ -1,0 +1,4 @@
+segno
+adb-shell
+rsa
+airtouch5py

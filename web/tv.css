@@ -1,0 +1,250 @@
+/* guest-tv, the TV screen. Designed at 1920x1080 like couch-tv: 1rem = 16px at that width, so it
+   scales with the TV's real CSS viewport. tvOS numbers: safe area 60 top and bottom, 80 at the sides.
+   Text never under 23px (1.4375rem) because it is read from the couch. */
+
+@font-face { font-family: "Inter"; font-weight: 100 900; font-display: block; src: url(fonts/inter-latin-wght-normal.woff2) format("woff2"); }
+@font-face { font-family: "Antonio"; font-weight: 300; font-display: block; src: url(fonts/antonio-latin-300.woff2) format("woff2"); }
+
+:root {
+  --text: #f7f6f3;
+  --text-2: rgba(247, 246, 243, 0.72);
+  --text-3: rgba(247, 246, 243, 0.5);
+  --safe-x: 5rem;
+  --safe-y: 3.75rem;
+  --glass: rgba(22, 22, 28, 0.34);
+  --glass-strong: rgba(18, 18, 24, 0.58);
+  --rim: rgba(255, 255, 255, 0.16);
+  --warm: #ffd89a;
+  --cool: #9fd8ff;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: calc(100vw / 120); background: #0b0b0e; color: var(--text); }
+body {
+  width: 100vw; height: 100vh; overflow: hidden; background: #0b0b0e;
+  font-family: "Inter", system-ui, sans-serif; font-weight: 450; letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased; cursor: none; user-select: none; -webkit-user-select: none;
+}
+body.mouse { cursor: default; }
+
+/* ---------- the glass: blurred, a little saturated, a fine light rim ---------- */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(1.75rem) saturate(170%); backdrop-filter: blur(1.75rem) saturate(170%);
+  box-shadow: inset 0 0 0 0.0625rem var(--rim), inset 0 0.0625rem 0 rgba(255, 255, 255, 0.14), 0 1.5rem 3.75rem rgba(0, 0, 0, 0.28);
+}
+
+/* ---------- scene ---------- */
+.scene { position: fixed; top: 0; right: 0; bottom: 0; left: 0; overflow: hidden; }
+.scene .sbg, .scene .fg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.scene .sbg { animation: drift 80s ease-in-out infinite alternate; }
+.scene .fg { animation: drift 80s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1.02); } to { transform: scale(1.06) translate(-0.6%, -0.4%); } }
+.scene .shade {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.36) 0%, rgba(0, 0, 0, 0) 24%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.42) 66%, rgba(0, 0, 0, 0.78) 100%);
+}
+.gclock {
+  position: absolute; left: 0; right: 0; top: 7.5rem; text-align: center; white-space: nowrap;
+  font-family: "Antonio", "Arial Narrow", sans-serif; font-weight: 300; font-size: 25rem; line-height: 0.82; letter-spacing: -0.02em;
+  filter: drop-shadow(0 0.375rem 1.75rem rgba(0, 0, 0, 0.16)); animation: drift 80s ease-in-out infinite alternate;
+}
+.gclock .fill {
+  display: block; padding: 0.2em 0; margin: -0.2em 0; color: transparent;
+  -webkit-background-clip: text; background-clip: text; background-size: 100vw 100vh; background-repeat: no-repeat;
+  filter: var(--fill, brightness(1.12) saturate(1.15));
+}
+.gclock .rim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; color: rgba(255, 255, 255, 0.08); -webkit-text-stroke: 0.09rem rgba(255, 255, 255, 0.55); }
+.gclock .sheen {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.22) 100%);
+}
+.late .scene .sbg, .late .scene .fg, .late .gclock { filter: brightness(0.74); }
+
+/* ---------- top ---------- */
+.top {
+  position: fixed; top: var(--safe-y); left: var(--safe-x); right: var(--safe-x); z-index: 3;
+  display: flex; justify-content: flex-end; align-items: flex-start;
+}
+/* the welcome sits low on the left, just above the cards, like a title on Apple TV */
+.hello { position: fixed; left: var(--safe-x); bottom: 26.5rem; max-width: 70rem; text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.45); }
+.eyebrow { font-size: 1.4375rem; line-height: 1.75rem; font-weight: 640; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+.hello h1 { margin-top: 0.5rem; font-size: 3.5rem; line-height: 4rem; font-weight: 680; letter-spacing: -0.025em; }
+.hello .sub { margin-top: 0.5rem; font-size: 1.75rem; line-height: 2.25rem; color: rgba(255, 255, 255, 0.86); }
+.phone-chip { display: flex; align-items: flex-start; gap: 1rem; padding: 0.75rem 0.875rem; border-radius: 1.5rem; }
+.phone-chip .qr { width: 6.25rem; height: 6.25rem; border-radius: 0.75rem; overflow: hidden; background: #fff; }
+.phone-chip .step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.phone-chip .step span { font-size: 1.125rem; line-height: 1.5rem; color: var(--text); font-weight: 600; max-width: none; white-space: nowrap; }
+.phone-chip .qr svg, .qr svg { display: block; width: 100%; height: 100%; }
+.phone-chip b { display: block; font-size: 1.5rem; line-height: 1.875rem; font-weight: 650; }
+.phone-chip span { display: block; font-size: 1.4375rem; line-height: 1.875rem; color: var(--text-2); max-width: 15rem; }
+
+.date {
+  position: fixed; left: 0; right: 0; top: 4rem; z-index: 2; text-align: center; white-space: nowrap;
+  font-size: 2rem; line-height: 2.5rem; font-weight: 520; text-shadow: 0 0.125rem 1.125rem rgba(0, 0, 0, 0.3);
+}
+.date .wx { color: rgba(255, 255, 255, 0.82); font-weight: 420; }
+.date svg { width: 1.875rem; height: 1.875rem; vertical-align: -0.3rem; margin: 0 0.35rem 0 0.9rem; }
+
+/* ---------- cards ---------- */
+.home { position: fixed; left: var(--safe-x); right: var(--safe-x); bottom: var(--safe-y); z-index: 3; }
+.cards { display: grid; gap: 1.5rem; height: 15rem; }
+.card {
+  position: relative; border-radius: 1.75rem; padding: 1.5rem 1.625rem; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform 260ms var(--ease), box-shadow 260ms var(--ease), background 260ms var(--ease);
+}
+.card .k { display: flex; align-items: center; gap: 0.625rem; font-size: 1.4375rem; line-height: 1.75rem; font-weight: 620; color: var(--text-2); }
+.card .k svg { width: 1.75rem; height: 1.75rem; flex: none; }
+.card .big { font-size: 2.5rem; line-height: 2.875rem; font-weight: 650; letter-spacing: -0.02em; }
+.card .mid { font-size: 1.875rem; line-height: 2.25rem; font-weight: 620; letter-spacing: -0.01em; }
+.card .one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .small { font-size: 1.4375rem; line-height: 1.875rem; color: var(--text-2); }
+.card .pw { margin: 0.25rem 0; font-size: 2.125rem; line-height: 2.75rem; white-space: nowrap; font-weight: 640; letter-spacing: 0.01em; overflow-wrap: anywhere; }
+.card .row { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.card .mini-qr { width: 6rem; height: 6rem; border-radius: 0.625rem; overflow: hidden; flex: none; background: #fff; }
+.card.photo { background-size: cover; background-position: center; }
+.card .pick { font-size: 1.75rem; line-height: 2.25rem; font-weight: 640; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .pick i { font-style: normal; display: inline-block; min-width: 3.5rem; font-size: 1.4375rem; font-weight: 600; color: var(--warm); }
+.card.lead { background: rgba(255, 244, 228, 0.16); }
+.card.focus {
+  transform: translateY(-0.5rem) scale(1.04); z-index: 2;
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 0 0 0.1875rem rgba(255, 255, 255, 0.9), 0 2rem 3.5rem rgba(0, 0, 0, 0.5);
+}
+.card.focus::after {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0.16) 50%, rgba(255, 255, 255, 0) 65%);
+  background-size: 250% 100%; animation: glint 5s ease-in-out infinite alternate;
+}
+@keyframes glint { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+
+.fc { display: flex; gap: 1.25rem; }
+.fc .d { text-align: center; min-width: 4.5rem; }
+.fc .d b { display: block; font-size: 1.4375rem; line-height: 1.75rem; font-weight: 620; color: var(--text-2); }
+.fc .d svg { width: 2.5rem; height: 2.5rem; margin: 0.25rem 0; }
+.fc .d span { display: block; font-size: 1.4375rem; line-height: 1.75rem; font-weight: 600; }
+.fc .d span i { font-style: normal; color: var(--text-3); margin-left: 0.25rem; }
+.fc .d.today b { color: #fff; }
+
+.zone-dots { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.zone-dots span { font-size: 1.4375rem; line-height: 2rem; padding: 0 0.75rem; border-radius: 1rem; background: rgba(255, 255, 255, 0.1); color: var(--text-2); }
+.zone-dots span.on { background: rgba(159, 216, 255, 0.24); color: #fff; }
+.zone-dots span.on.heat { background: rgba(255, 190, 120, 0.26); }
+
+/* ---------- apps ---------- */
+.apps { display: flex; gap: 1.25rem; margin-top: 1.75rem; height: 5.25rem; align-items: center; }
+.apps.none { display: none; }
+.app {
+  height: 4.5rem; min-width: 8rem; padding: 0 1.5rem; border-radius: 2.25rem; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 640; color: rgba(255, 255, 255, 0.9); white-space: nowrap; flex: none;
+  transition: transform 220ms var(--ease), background 220ms var(--ease), color 220ms var(--ease);
+}
+.app.banner { padding: 0; width: 8rem; min-width: 0; height: 4.5rem; border-radius: 0.75rem; overflow: hidden; }
+.app.banner img { width: 100%; height: 100%; object-fit: cover; }
+.app.focus { background: #fff; color: #111; transform: scale(1.1); box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4); }
+.app.pill { gap: 0.75rem; padding: 0 1.75rem 0 1.375rem; }
+.app.pill svg { width: 1.75rem; height: 1.75rem; flex: none; }
+.app.pill i { font-style: normal; font-weight: 520; color: var(--text-3); margin-left: 0.125rem; }
+.app.pill.focus i { color: rgba(0, 0, 0, 0.5); }
+.apps .sep { width: 0.125rem; height: 2.5rem; margin: 0 0.5rem; border-radius: 0.0625rem; background: rgba(255, 255, 255, 0.24); flex: none; }
+.apps .label { margin-left: 0.5rem; font-size: 1.4375rem; color: var(--text-3); white-space: nowrap; }
+
+/* ---------- sheet ---------- */
+.sheet {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; opacity: 0; pointer-events: none;
+  background: rgba(8, 8, 12, 0.42); -webkit-backdrop-filter: blur(2.5rem) saturate(150%); backdrop-filter: blur(2.5rem) saturate(150%);
+  transition: opacity 320ms var(--ease);
+}
+.sheet.on { opacity: 1; pointer-events: auto; }
+.sheet-in { position: absolute; top: var(--safe-y); bottom: 7rem; left: var(--safe-x); right: var(--safe-x); display: flex; gap: 3rem; transform: scale(0.98); transition: transform 320ms var(--ease); }
+.sheet.on .sheet-in { transform: none; }
+.sheet-nav { width: 26rem; flex: none; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; }
+.sheet-nav h2 { font-size: 3rem; line-height: 3.5rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 1.5rem; }
+.sheet-nav .item {
+  font-size: 1.75rem; line-height: 2.25rem; font-weight: 560; padding: 0.875rem 1.25rem; border-radius: 1rem; color: var(--text-2);
+  transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
+}
+.sheet-nav .item.sel { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.sheet-nav .item.focus { background: #fff; color: #111; transform: scale(1.03); }
+.sheet-nav .group { margin-top: 1rem; font-size: 1.4375rem; font-weight: 640; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); padding: 0 1.25rem; }
+.sheet-main { flex: 1; min-width: 0; overflow: hidden; }
+.sheet-main.mid { display: flex; flex-direction: column; justify-content: center; padding-bottom: 4rem; }
+.sheet-hint { position: absolute; left: 0; right: 0; bottom: 3rem; text-align: center; font-size: 1.4375rem; color: var(--text-3); }
+.sheet-hint b { color: var(--text-2); font-weight: 620; }
+
+.panel { border-radius: 2rem; padding: 2.5rem 2.75rem; }
+.panel + .panel { margin-top: 1.5rem; }
+.panel h3 { font-size: 2.5rem; line-height: 3rem; font-weight: 680; letter-spacing: -0.02em; }
+.panel p, .panel li { font-size: 1.875rem; line-height: 2.625rem; color: rgba(255, 255, 255, 0.88); }
+.panel .lede { font-size: 2.125rem; line-height: 3rem; color: #fff; }
+.panel .meta { margin-top: 0.75rem; font-size: 1.5rem; line-height: 2rem; color: var(--text-2); }
+.panel ol, .panel ul { margin-top: 1rem; padding-left: 2.25rem; }
+.panel li + li { margin-top: 0.5rem; }
+.photo-panel { height: 20rem; border-radius: 2rem; background-size: cover; background-position: center; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+.photo-panel::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%); }
+.photo-panel span { position: absolute; left: 2.25rem; bottom: 1.75rem; z-index: 1; font-size: 2.25rem; font-weight: 660; letter-spacing: -0.015em; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.kv { display: flex; justify-content: space-between; align-items: baseline; padding: 1rem 0; border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.12); }
+.kv:last-child { border-bottom: 0; }
+.kv span { font-size: 1.75rem; color: var(--text-2); }
+.kv b { font-size: 2.25rem; font-weight: 650; letter-spacing: 0.02em; }
+.places .pl { padding: 1.25rem 0; border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.12); }
+.places .pl:last-child { border-bottom: 0; }
+.places .pl b { display: block; font-size: 2rem; line-height: 2.5rem; font-weight: 650; }
+.places .pl p { font-size: 1.625rem; line-height: 2.25rem; color: rgba(255, 255, 255, 0.82); }
+.places .pl em { font-style: normal; color: var(--warm); font-size: 1.5rem; }
+.wifi-big { display: flex; gap: 3rem; align-items: center; }
+.wifi-big .qr { width: 20rem; height: 20rem; border-radius: 1.5rem; overflow: hidden; background: #fff; flex: none; }
+.wifi-big .name { font-size: 1.75rem; color: var(--text-2); }
+.wifi-big .val { font-size: 4rem; line-height: 4.75rem; font-weight: 680; letter-spacing: -0.01em; margin-bottom: 1.5rem; word-break: break-all; }
+.fc.wide { gap: 2rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.fc.wide .d { min-width: 7rem; }
+.fc.wide .d svg { width: 3.5rem; height: 3.5rem; }
+.fc.wide .d em { display: block; font-style: normal; font-size: 1.4375rem; color: var(--cool); }
+
+/* ---------- climate ---------- */
+.zones { display: flex; gap: 1.75rem; flex-wrap: wrap; }
+.zone {
+  width: 28rem; border-radius: 2rem; padding: 2.25rem 2rem 2rem; text-align: center;
+  transition: transform 220ms var(--ease), box-shadow 220ms var(--ease), background 220ms var(--ease);
+}
+.zone.focus { transform: scale(1.04); background: rgba(255, 255, 255, 0.2); box-shadow: inset 0 0 0 0.1875rem rgba(255, 255, 255, 0.9), 0 2rem 3.5rem rgba(0, 0, 0, 0.45); }
+.zone .zn { font-size: 1.875rem; font-weight: 650; }
+.zone .dial { position: relative; width: 18rem; height: 18rem; margin: 1.25rem auto 1rem; }
+.zone .dial svg { width: 100%; height: 100%; transform: rotate(135deg); }
+.zone .dial .track { fill: none; stroke: rgba(255, 255, 255, 0.14); stroke-width: 9; stroke-linecap: round; }
+.zone .dial .arc { fill: none; stroke: var(--cool); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 300ms var(--ease), stroke 300ms; }
+.zone.heat .dial .arc { stroke: #ffb46e; }
+.zone.off .dial .arc { stroke: rgba(255, 255, 255, 0.35); }
+.zone .dial .val { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.zone .dial .val b { font-size: 6.5rem; line-height: 6.5rem; font-weight: 300; letter-spacing: -0.04em; font-family: "Antonio", "Inter", sans-serif; }
+.zone .dial .val span { font-size: 1.4375rem; color: var(--text-2); }
+.zone .st { font-size: 1.625rem; line-height: 2.125rem; color: var(--text-2); }
+.zone .pwr {
+  display: inline-block; margin-top: 1rem; font-size: 1.5rem; font-weight: 650; padding: 0.375rem 1.25rem; border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+.zone.on .pwr { background: rgba(159, 216, 255, 0.3); }
+.zone.on.heat .pwr { background: rgba(255, 180, 110, 0.32); }
+.climate-note { margin-top: 1.75rem; font-size: 1.5rem; line-height: 2.125rem; color: var(--text-2); max-width: 70rem; }
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: 3rem; z-index: 20; transform: translate(-50%, 1rem); opacity: 0;
+  padding: 0.875rem 1.75rem; border-radius: 2rem; font-size: 1.5rem; font-weight: 600;
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease);
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* rest: no remote for a while, the cards slide away and the home's photo shows */
+.home, .hello, .phone-chip { transition: transform 900ms var(--ease), opacity 900ms var(--ease); }
+.rest .home { transform: translateY(26rem); opacity: 0; }
+.rest .hello { transform: translateY(17rem); }
+.rest .hello .sub { opacity: 0; }
+
+/* between stays: a calm screen, nothing private */
+.between .phone-chip { display: none; }

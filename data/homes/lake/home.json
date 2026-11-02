@@ -1,0 +1,69 @@
+{
+  "id": "lake",
+  "mode": "stay",
+  "demo": true,
+  "name": "Lakeside",
+  "kind": "Lake house",
+  "host": "Kate",
+  "photos": {
+    "hero": "lake-hero",
+    "inside": "lake-inside",
+    "area": "lake-area"
+  },
+  "scene": {
+    "clockTop": 7,
+    "clockSize": 18,
+    "fg": false,
+    "fill": "brightness(1.9) saturate(0.6) contrast(0.9)"
+  },
+  "checkin": "15:00",
+  "checkout": "10:00",
+  "demo_stay": {
+    "guest": "Sarah and Tom",
+    "from": -1,
+    "nights": 3
+  },
+  "wifi": {
+    "ssid": "Lakeside Guest",
+    "password": "still-water-24"
+  },
+  "access": [
+    {
+      "label": "Front door",
+      "code": "4821"
+    },
+    {
+      "label": "Boat shed",
+      "code": "0613"
+    }
+  ],
+  "climate": {
+    "zones": [
+      "Living",
+      "Main bedroom",
+      "Bunk room"
+    ],
+    "unit_on": true
+  },
+  "control": {
+    "aircon": "all",
+    "lights": "all"
+  },
+  "lights": {
+    "kind": "demo",
+    "rooms": {
+      "Living": [
+        "living-1",
+        "living-2"
+      ],
+      "Main bedroom": [
+        "main-bedroom-1",
+        "main-bedroom-2"
+      ],
+      "Bunk room": [
+        "bunk-room-1",
+        "bunk-room-2"
+      ]
+    }
+  }
+}

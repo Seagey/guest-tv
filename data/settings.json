@@ -1,0 +1,26 @@
+{
+  "port": 5410,
+  "default_home": "lake",
+  "weather": {
+    "place": "Byron Bay",
+    "lat": -28.6474,
+    "lon": 153.602,
+    "tz": "Australia/Sydney"
+  },
+  "aircon": {},
+  "profiles": {
+    "on": false,
+    "names": [
+      "Guest",
+      "Guests",
+      "Visitor",
+      "Visitors"
+    ],
+    "blind": {}
+  },
+  "guest_apps": [],
+  "agent": {
+    "level": "locked"
+  },
+  "film": false
+}

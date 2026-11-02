@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Keeps guest-tv running on a Mac, and starts it again after a restart.
+     1. Replace FOLDER (twice) with the full path to this guest-tv folder.
+     2. Copy to ~/Library/LaunchAgents/guest-tv.plist
+     3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/guest-tv.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>guest-tv</string>
+  <key>ProgramArguments</key>
+  <array><string>FOLDER/.venv/bin/python</string><string>server.py</string></array>
+  <key>WorkingDirectory</key><string>FOLDER</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+</dict>
+</plist>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome</title>
+<link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/antonio-latin-300.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="tv.css">
+</head>
+<body>
+<!-- the home's photo, the glass clock behind the scenery, the scenery cut out in front (tv.js adds the photos) -->
+<div class="scene" id="scene" aria-hidden="true">
+  <div class="gclock" id="gclock"></div>
+  <div class="shade"></div>
+</div>
+
+<header class="top">
+  <div class="hello" id="hello">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="welcome"></h1>
+    <p class="sub" id="sub"></p>
+  </div>
+  <div class="phone-chip glass" id="phone-chip">
+    <div class="step" id="wifi-step"><div class="qr" id="wifi-qr"></div><span>1 · Join the Wi-Fi</span></div>
+    <div class="step"><div class="qr" id="phone-qr"></div><span id="phone-what">2 · Guest remote</span></div>
+  </div>
+</header>
+
+<p class="date" id="date"></p>
+
+<main class="home" id="home">
+  <section class="cards" id="cards" aria-label="Your stay"></section>
+  <section class="apps" id="apps" aria-label="Apps"></section>
+</main>
+
+<!-- one sheet at a time: Your stay, Wi-Fi, Climate, House guide, Around here, Check-out -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-in">
+    <nav class="sheet-nav" id="sheet-nav"></nav>
+    <div class="sheet-main" id="sheet-main"></div>
+  </div>
+  <p class="sheet-hint" id="sheet-hint"></p>
+</div>
+
+<div class="toast glass" id="toast" aria-live="polite"></div>
+
+<script src="tv.js"></script>
+</body>
+</html>

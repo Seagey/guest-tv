@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+logs/
+data/private.json
+data/aircon-ip.json
+data/actions.json
+data/booking-mcp.json
+data/bookings-inbox/
+data/homes/*/film.json
+tools/booking-samples/fake_bookings.jsonl
+tools/booking-samples/test-booking-mcp.json
+.DS_Store

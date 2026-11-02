@@ -1,0 +1,12 @@
+{
+  "id": "guest",
+  "mode": "guest",
+  "name": "Guest room",
+  "kind": "Our place",
+  "host": "",
+  "photos": { "hero": "guest-hero" },
+  "scene": { "clockTop": 9, "clockSize": 25 },
+  "checkin": "14:00",
+  "checkout": "10:00",
+  "climate": { "zones": [], "unit_on": true, "labels": {} }
+}

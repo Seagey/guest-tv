@@ -1,0 +1,172 @@
+{
+  "welcome": "Welcome to Headland House. We love this place, and we hope you do too. Swim in the pool, borrow a board and watch the bay from the deck. Everything you need is on this screen, and we hope you have a lovely stay.",
+  "rules": [
+    {
+      "title": "Quiet hours",
+      "body": "Please keep noise low from 10pm to 7am. Sound carries well across the bay."
+    },
+    {
+      "title": "Pool",
+      "body": "Swim at your own risk. Children must have an adult watching them at all times. Please shower off sunscreen before you get in."
+    },
+    {
+      "title": "No smoking",
+      "body": "No smoking or vaping inside the house. Please use the outside areas and put butts in a bin."
+    },
+    {
+      "title": "Guest numbers",
+      "body": "The house sleeps 8. Please check with the host before you invite visitors or hold a party."
+    },
+    {
+      "title": "Surfboards",
+      "body": "Feel free to borrow the boards. Rinse them with fresh water after each surf and put them back where you found them."
+    }
+  ],
+  "howto": [
+    {
+      "title": "Wi-Fi, door code and air conditioning",
+      "body": "All of these are on this TV. Scan the QR code to open the same page on your phone."
+    },
+    {
+      "title": "Outdoor shower",
+      "body": "Use it after the beach or the pool. Please keep sandy feet and wet towels out of the house."
+    },
+    {
+      "title": "Surfboards",
+      "body": "Check the board for dings before you go out. Tell us if you break one. Always check the surf and swim between the flags."
+    },
+    {
+      "title": "Rubbish and recycling",
+      "body": "Put rubbish and recycling in the right bins. Ask the host if you are unsure about bin night."
+    }
+  ],
+  "local": [
+    {
+      "category": "Eat",
+      "items": [
+        {
+          "name": "Raes Dining Room",
+          "note": "A special dinner in a bright, breezy room at Wategos Beach.",
+          "distance": "5 min walk",
+          "book": "https://www.sevenrooms.com/reservations/raesonwategos"
+        },
+        {
+          "name": "Pixie Food & Wine",
+          "note": "Relaxed coastal Italian with a very good wine list.",
+          "distance": "8 min drive",
+          "book": "https://pixiebyronbay.com.au/bookings"
+        },
+        {
+          "name": "Beach Byron Bay",
+          "note": "Casual coastal dining with ocean views over Clarkes Beach.",
+          "distance": "8 min drive",
+          "book": "https://www.sevenrooms.com/reservations/beachbyronbay"
+        },
+        {
+          "name": "The Balcony Bar & Oyster Co.",
+          "note": "Oysters and drinks above Jonson Street. Good for a casual lunch.",
+          "distance": "8 min drive",
+          "book": "https://www.sevenrooms.com/explore/balconybar-byronbay/reservations/create/search"
+        }
+      ]
+    },
+    {
+      "category": "Things to do",
+      "items": [
+        {
+          "name": "Cape Byron Lighthouse",
+          "note": "Built in 1901. Walk up for big views of the coast.",
+          "distance": "10 min drive"
+        },
+        {
+          "name": "Cape Byron Walking Track",
+          "note": "A loop of about 3.7 km, around 2 hours. You can walk just a short section.",
+          "distance": "Starts near the house"
+        },
+        {
+          "name": "Whale watching from the headland",
+          "note": "Humpbacks head south from September to November. Bring binoculars.",
+          "distance": "10 min drive"
+        },
+        {
+          "name": "Little Wategos",
+          "note": "A quiet little beach and lookout, just off the main track.",
+          "distance": "10 min walk"
+        }
+      ]
+    },
+    {
+      "category": "Coffee",
+      "items": [
+        {
+          "name": "Bayleaf Cafe",
+          "note": "A local favourite for breakfast and a good flat white.",
+          "distance": "8 min drive"
+        },
+        {
+          "name": "Folk",
+          "note": "Easy, friendly cafe for coffee and a bite.",
+          "distance": "8 min drive"
+        },
+        {
+          "name": "Barefoot Brew Room",
+          "note": "Early starts for a quick coffee before the beach.",
+          "distance": "8 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Beaches",
+      "items": [
+        {
+          "name": "Wategos Beach",
+          "note": "A lovely beach for a swim. Toilets are close by.",
+          "distance": "5 min walk"
+        },
+        {
+          "name": "The Pass",
+          "note": "A popular spot for surfing and a swim.",
+          "distance": "10 min walk"
+        },
+        {
+          "name": "Clarkes Beach",
+          "note": "A long beach near town. Easy to walk to the cafes.",
+          "distance": "8 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Walks",
+      "items": [
+        {
+          "name": "Captain Cook Lookout",
+          "note": "A great view along the track. Good at sunrise.",
+          "distance": "10 min drive"
+        },
+        {
+          "name": "The Pass to Wategos",
+          "note": "A short coastal walk between two beaches.",
+          "distance": "15 min walk"
+        }
+      ]
+    }
+  ],
+  "checkout": {
+    "time": "10:00",
+    "steps": [
+      "Strip the beds and leave the sheets in a pile",
+      "Put dirty towels in the laundry",
+      "Wash up and run the dishwasher",
+      "Take out the rubbish and recycling",
+      "Rinse the surfboards and put them back",
+      "Turn off the air conditioning and lights",
+      "Lock all doors and windows"
+    ]
+  },
+  "emergency": [
+    {
+      "name": "Emergency (police, fire, ambulance)",
+      "phone": "000"
+    }
+  ]
+}

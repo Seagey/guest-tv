@@ -1,0 +1,26 @@
+{
+  "homes": {
+    "guest": {
+      "host": "Your name",
+      "wifi": {
+        "ssid": "Your Wi-Fi name",
+        "password": "your-wifi-password"
+      },
+      "room": "Bed 2",
+      "access": [],
+      "climate": {
+        "zones": [
+          "Bed 2"
+        ],
+        "labels": {
+          "Bed 2": "Your room"
+        }
+      },
+      "stay": {
+        "guest": "",
+        "from": "",
+        "to": ""
+      }
+    }
+  }
+}

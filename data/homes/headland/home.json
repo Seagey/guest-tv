@@ -1,0 +1,73 @@
+{
+  "id": "headland",
+  "mode": "stay",
+  "demo": true,
+  "name": "Headland House",
+  "kind": "Beach house",
+  "host": "Mia",
+  "photos": {
+    "hero": "headland-hero",
+    "inside": "headland-inside",
+    "area": "headland-area"
+  },
+  "scene": {
+    "clockTop": 8,
+    "clockSize": 18,
+    "clockX": 12
+  },
+  "checkin": "15:00",
+  "checkout": "10:00",
+  "demo_stay": {
+    "guest": "Ella and friends",
+    "from": -2,
+    "nights": 5
+  },
+  "wifi": {
+    "ssid": "Headland House",
+    "password": "salt-and-sun"
+  },
+  "access": [
+    {
+      "label": "Front door",
+      "code": "3141"
+    },
+    {
+      "label": "Pool gate",
+      "code": "2481"
+    }
+  ],
+  "climate": {
+    "zones": [
+      "Living",
+      "Main bedroom",
+      "Bunk room",
+      "Studio"
+    ],
+    "unit_on": true
+  },
+  "control": {
+    "aircon": "all",
+    "lights": "all"
+  },
+  "lights": {
+    "kind": "demo",
+    "rooms": {
+      "Living": [
+        "living-1",
+        "living-2"
+      ],
+      "Main bedroom": [
+        "main-bedroom-1",
+        "main-bedroom-2"
+      ],
+      "Bunk room": [
+        "bunk-room-1",
+        "bunk-room-2"
+      ],
+      "Studio": [
+        "studio-1",
+        "studio-2"
+      ]
+    }
+  }
+}

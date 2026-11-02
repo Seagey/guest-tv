@@ -1,0 +1,54 @@
+{
+  "id": "carriage",
+  "mode": "stay",
+  "demo": true,
+  "name": "The Carriage",
+  "kind": "Restored 1920s railway carriage",
+  "host": "Jen",
+  "photos": {
+    "hero": "carriage-hero",
+    "inside": "carriage-inside",
+    "area": "carriage-area"
+  },
+  "scene": {
+    "clockTop": 6.5,
+    "clockSize": 20,
+    "clockX": -12
+  },
+  "checkin": "15:00",
+  "checkout": "10:00",
+  "demo_stay": {
+    "guest": "Alex",
+    "from": 0,
+    "nights": 2
+  },
+  "wifi": {
+    "ssid": "The Carriage",
+    "password": "fig-tree-bath"
+  },
+  "access": [
+    {
+      "label": "Gate",
+      "code": "2208"
+    }
+  ],
+  "climate": {
+    "zones": [
+      "Carriage"
+    ],
+    "unit_on": true
+  },
+  "control": {
+    "aircon": "all",
+    "lights": "all"
+  },
+  "lights": {
+    "kind": "demo",
+    "rooms": {
+      "Carriage": [
+        "carriage-1",
+        "carriage-2"
+      ]
+    }
+  }
+}

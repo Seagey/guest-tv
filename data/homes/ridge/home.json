@@ -1,0 +1,60 @@
+{
+  "id": "ridge",
+  "mode": "stay",
+  "demo": true,
+  "name": "The Ridge",
+  "kind": "Mountain cabin",
+  "host": "Mick",
+  "photos": {
+    "hero": "ridge-hero",
+    "inside": "ridge-inside",
+    "area": "ridge-area"
+  },
+  "scene": {
+    "clockTop": 7,
+    "clockSize": 19,
+    "clockX": -26,
+    "fill": "brightness(0.82) saturate(1.5) contrast(1.1)"
+  },
+  "checkin": "14:00",
+  "checkout": "10:00",
+  "demo_stay": {
+    "guest": "Priya and Sam",
+    "from": -1,
+    "nights": 2
+  },
+  "wifi": {
+    "ssid": "The Ridge",
+    "password": "snowgum-morning"
+  },
+  "access": [
+    {
+      "label": "Cabin door",
+      "code": "1907"
+    }
+  ],
+  "climate": {
+    "zones": [
+      "Cabin",
+      "Loft"
+    ],
+    "unit_on": true
+  },
+  "control": {
+    "aircon": "all",
+    "lights": "all"
+  },
+  "lights": {
+    "kind": "demo",
+    "rooms": {
+      "Cabin": [
+        "cabin-1",
+        "cabin-2"
+      ],
+      "Loft": [
+        "loft-1",
+        "loft-2"
+      ]
+    }
+  }
+}

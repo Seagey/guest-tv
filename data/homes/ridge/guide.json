@@ -1,0 +1,168 @@
+{
+  "welcome": "Welcome to The Ridge. Light the fire, run a bath under the stars and watch the ranges change colour. We hope it is a slow, quiet stay.",
+  "rules": [
+    {
+      "title": "Quiet hours",
+      "body": "Please keep noise down from 10pm to 7am. Sound carries a long way across the ridge."
+    },
+    {
+      "title": "Fire safety",
+      "body": "Use the wood fire only with the screen closed. Never leave it burning when you go out or go to bed."
+    },
+    {
+      "title": "No smoking",
+      "body": "No smoking or vaping inside. Please put out any butts fully, as the bush is dry and grassy."
+    },
+    {
+      "title": "Guests and parties",
+      "body": "The cabin is for the two guests on your booking. No parties or events, and no extra overnight guests."
+    },
+    {
+      "title": "Wildlife",
+      "body": "Do not feed the wildlife. Keep food and bins closed so possums and bush turkeys stay away."
+    }
+  ],
+  "howto": [
+    {
+      "title": "Wi-Fi, door code and air con",
+      "body": "Find these on the TV, or scan its QR code to open them on your phone."
+    },
+    {
+      "title": "Wood fire",
+      "body": "Open the vent, place kindling and firelighters under two logs, then light. Close the screen once it is going. Let ashes cool and leave them."
+    },
+    {
+      "title": "Outdoor bath",
+      "body": "Fill the bath, check the temperature with your hand, and relax. Please drain and rinse it before you leave."
+    },
+    {
+      "title": "Rubbish and recycling",
+      "body": "Put rubbish and recycling in the separate bins. Please do not leave food outside overnight."
+    }
+  ],
+  "local": [
+    {
+      "category": "Eat",
+      "items": [
+        {
+          "name": "Bangalow Hotel",
+          "note": "Classic country pub with hearty meals and cold drinks. Good for a relaxed dinner.",
+          "distance": "about 15 min drive"
+        },
+        {
+          "name": "Ciao, Mate!",
+          "note": "Woodfired pizza in Bangalow. Casual and good to share.",
+          "distance": "about 15 min drive",
+          "book": "https://www.sevenrooms.com/reservations/ciaomate"
+        },
+        {
+          "name": "The Eltham Hotel",
+          "note": "Hinterland pub with a country feel, a short scenic drive away.",
+          "distance": "about 25 min drive"
+        },
+        {
+          "name": "Butcher Baker",
+          "note": "Byron Street spot for breakfast, lunch and pastries in Bangalow.",
+          "distance": "about 15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Things to do",
+      "items": [
+        {
+          "name": "Bangalow Farmers Market",
+          "note": "Saturday mornings in Piccabeen Park. Local food, coffee and breakfast stalls.",
+          "distance": "about 15 min drive"
+        },
+        {
+          "name": "Mullum Farmers Market",
+          "note": "Held on Fridays. Fresh produce, baked goods and live music.",
+          "distance": "about 25 min drive"
+        },
+        {
+          "name": "The Crystal Castle",
+          "note": "Gardens, giant crystals, a labyrinth and a cafe at 81 Monet Drive.",
+          "distance": "about 30 min drive"
+        },
+        {
+          "name": "Minyon Falls",
+          "note": "Rainforest lookout and waterfall in Whian Whian State Forest. Check track conditions before you go.",
+          "distance": "about 30 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Coffee",
+      "items": [
+        {
+          "name": "Moonshine Coffee Federal",
+          "note": "Specialty coffee and good food in Federal village.",
+          "distance": "about 10 min drive"
+        },
+        {
+          "name": "Sparrow Coffee",
+          "note": "Take-away coffee on Byron Street, Bangalow.",
+          "distance": "about 15 min drive"
+        },
+        {
+          "name": "The Bangalow Bread Co.",
+          "note": "Good coffee and baked goods on Byron Street.",
+          "distance": "about 15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Rainy day",
+      "items": [
+        {
+          "name": "Brunswick Valley Historical Society Museum",
+          "note": "A look at local history when the weather is wet.",
+          "distance": "about 25 min drive"
+        },
+        {
+          "name": "The Crystal Castle cafe and bookshop",
+          "note": "Browse the bookshop and have a bite under cover.",
+          "distance": "about 30 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Supplies",
+      "items": [
+        {
+          "name": "Zentvelds Coffee",
+          "note": "Providore that brews coffee on site. Handy for beans and treats.",
+          "distance": "about 15 min drive"
+        },
+        {
+          "name": "Mullumbimby Community Gardens",
+          "note": "Organic local produce.",
+          "distance": "about 25 min drive"
+        }
+      ]
+    }
+  ],
+  "checkout": {
+    "time": "10:00",
+    "steps": [
+      "Strip the beds and leave the linen in a pile",
+      "Make sure the fire is fully out and cool",
+      "Drain and rinse the outdoor bath",
+      "Put all rubbish and recycling in the bins",
+      "Close all windows and doors",
+      "Turn off lights and the air conditioning",
+      "Lock up using the door code on the TV"
+    ]
+  },
+  "emergency": [
+    {
+      "name": "Emergency (police, fire, ambulance)",
+      "phone": "000"
+    },
+    {
+      "name": "Byron Central Hospital (24 hour Emergency Department), 54 Ewingsdale Road, Ewingsdale",
+      "phone": "(02) 6639 9400"
+    }
+  ]
+}

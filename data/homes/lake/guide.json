@@ -1,0 +1,172 @@
+{
+  "welcome": "Welcome to Lakeside. We built this place for slow mornings on the jetty and long nights round the fire pit. Grab a kayak, put your feet up and treat it like home.",
+  "rules": [
+    {
+      "title": "Quiet hours",
+      "body": "Please keep noise down from 10pm to 7am. Sound carries across the lake, and our neighbours will thank you."
+    },
+    {
+      "title": "Fire pit",
+      "body": "Only light the fire pit in the pit itself, and never leave it alone. Put it out fully with water before you go to bed or leave the property."
+    },
+    {
+      "title": "Jetty and kayaks",
+      "body": "Wear a life jacket on the water and keep children close by on the jetty. Do not swim or kayak after dark."
+    },
+    {
+      "title": "No smoking",
+      "body": "Please do not smoke inside the house. Use the outdoor areas and put butts in a bin, not on the ground or in the lake."
+    },
+    {
+      "title": "Guests and parties",
+      "body": "The home sleeps 6. Please do not host extra overnight guests or parties."
+    },
+    {
+      "title": "Rubbish and recycling",
+      "body": "Put rubbish and recycling in the right bins outside. Keep food scraps out of the lake."
+    }
+  ],
+  "howto": [
+    {
+      "title": "Wi-Fi and door code",
+      "body": "Look at the TV home screen for the Wi-Fi name, password and door code. Scan the QR code to open the same details on your phone."
+    },
+    {
+      "title": "Air conditioning",
+      "body": "Use the air conditioning controls on the TV, or on the phone page from the QR code. Please switch it off when you head out."
+    },
+    {
+      "title": "Fire pit",
+      "body": "Use the dry wood stacked nearby and a small pile of kindling. Keep the fire small and keep a bucket of water close. Soak it before you leave it."
+    },
+    {
+      "title": "Kayaks",
+      "body": "Kayaks and life jackets are by the jetty. Pull the kayaks back up out of the water when you finish."
+    },
+    {
+      "title": "Bins and recycling",
+      "body": "Bins are outside the house. Take the rubbish out on your last morning."
+    }
+  ],
+  "local": [
+    {
+      "category": "Eat",
+      "items": [
+        {
+          "name": "Raes Dining Room",
+          "note": "Mediterranean-style dinner on Wategos Beach. Book it for a special night.",
+          "distance": "20 min drive",
+          "book": "https://www.sevenrooms.com/reservations/raesonwategos"
+        },
+        {
+          "name": "Beach Byron Bay",
+          "note": "Relaxed meals with ocean views right on Clarkes Beach.",
+          "distance": "15 min drive",
+          "book": "https://www.sevenrooms.com/reservations/beachbyronbay"
+        },
+        {
+          "name": "Pixie Food & Wine",
+          "note": "Italian on Jonson Street. Good for a cosy dinner for two.",
+          "distance": "15 min drive",
+          "book": "https://pixiebyronbay.com.au/bookings"
+        },
+        {
+          "name": "Fishheads",
+          "note": "Casual seafood for an easy lunch or dinner.",
+          "distance": "15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Things to do",
+      "items": [
+        {
+          "name": "Cape Byron Lighthouse walk",
+          "note": "A 3.7 km loop with lookouts on the way up. Go early before it gets busy.",
+          "distance": "20 min drive"
+        },
+        {
+          "name": "Stone & Wood Brewery",
+          "note": "Try the beers on tap with a burger or pizza. A tasting paddle is on offer.",
+          "distance": "15 min drive"
+        },
+        {
+          "name": "Cape Byron Maritime Museum",
+          "note": "Small museum at the base of the lighthouse. Easy to add to the walk.",
+          "distance": "20 min drive"
+        },
+        {
+          "name": "Byron Community Market",
+          "note": "Live music, local food and handmade goods. It runs on the first Sunday of the month.",
+          "distance": "15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Coffee",
+      "items": [
+        {
+          "name": "Bayleaf Cafe",
+          "note": "Relaxed spot on Marvell Street with a mostly healthy menu. Try the coconut cold brew.",
+          "distance": "15 min drive"
+        },
+        {
+          "name": "Sparrow Coffee",
+          "note": "Allpress coffee on Byron Street, close to the main strip.",
+          "distance": "15 min drive"
+        },
+        {
+          "name": "Espressohead",
+          "note": "A local favourite in town for around 15 years.",
+          "distance": "15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Beaches",
+      "items": [
+        {
+          "name": "Wategos Beach",
+          "note": "A sheltered beach below the lighthouse. Lovely for a swim and a picnic.",
+          "distance": "20 min drive"
+        },
+        {
+          "name": "Clarkes Beach",
+          "note": "Easy beach right by the town centre. Walk along the sand to the lighthouse track.",
+          "distance": "15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Markets",
+      "items": [
+        {
+          "name": "Byron Bay Farmers Market",
+          "note": "Bread, fruit, juices and vegetables from local growers. Check the current day and time before you go.",
+          "distance": "15 min drive"
+        }
+      ]
+    }
+  ],
+  "checkout": {
+    "time": "10:00",
+    "steps": [
+      "Strip the beds and leave the used linen in a pile",
+      "Put the dishes in the dishwasher and run it",
+      "Take the rubbish and recycling to the outside bins",
+      "Make sure the fire pit is out and soaked with water",
+      "Bring the kayaks and life jackets in from the jetty",
+      "Turn off the air conditioning and lights, then lock up"
+    ]
+  },
+  "emergency": [
+    {
+      "name": "Emergency (police, fire, ambulance)",
+      "phone": "000"
+    },
+    {
+      "name": "Byron Central Hospital, 54 Ewingsdale Road, Ewingsdale",
+      "phone": "(02) 6639 9400"
+    }
+  ]
+}

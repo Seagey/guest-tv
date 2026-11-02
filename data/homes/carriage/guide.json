@@ -1,0 +1,180 @@
+{
+  "welcome": "Welcome to The Carriage. It's a 1920s railway carriage that I restored and set down under the big fig. Take your time here, run a bath outside, and listen to the paddock. The TV and the phone page behind its QR code have the Wi-Fi, door code and air conditioning.",
+  "rules": [
+    {
+      "title": "Quiet hours",
+      "body": "Please keep noise down from 10pm to 7am. Sound carries across the paddock at night."
+    },
+    {
+      "title": "Water is rainwater",
+      "body": "The tank is rainwater, so keep showers short. Fill the clawfoot bath only once per stay if you can."
+    },
+    {
+      "title": "Composting toilet",
+      "body": "Only toilet paper goes in. Add a scoop of the sawdust after each use. Please put nothing else in, including wipes."
+    },
+    {
+      "title": "Fire and candles",
+      "body": "No open flames inside the carriage. Use the outdoor fire area only if the host has told you it is allowed, and never on a total fire ban day."
+    },
+    {
+      "title": "Smoking",
+      "body": "No smoking or vaping inside the carriage. Please take butts with you."
+    },
+    {
+      "title": "Wildlife and paddock",
+      "body": "Keep food sealed and bins closed, as possums and other wildlife will visit. Please take care with the fig's roots and the paddock gate."
+    }
+  ],
+  "howto": [
+    {
+      "title": "Outdoor bath",
+      "body": "Turn the bath tap on and check the water temperature with your hand before you get in. Pull the plug when you finish. Rinse it out and wipe it dry."
+    },
+    {
+      "title": "Composting toilet",
+      "body": "Add a scoop of sawdust after each use. Keep the lid down. If the bin looks full, tell the host."
+    },
+    {
+      "title": "Wi-Fi, door code and air conditioning",
+      "body": "Look at the TV. It shows the Wi-Fi name and password, the door code and the air conditioning controls. Scan the QR code to see them on your phone."
+    },
+    {
+      "title": "Rubbish and recycling",
+      "body": "Put rubbish and recycling in the bins by the gate. Please keep lids shut so animals stay out."
+    }
+  ],
+  "local": [
+    {
+      "category": "Eat",
+      "items": [
+        {
+          "name": "Bangalow Pub (Bangalow Hotel)",
+          "note": "A classic country pub with a dining room. Book ahead for dinner.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "BangBurgerBar",
+          "note": "Easy burgers and chips when you can't face cooking.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Mangosteen",
+          "note": "A Japanese lunch spot on a local's tip list. Good for a quiet, special lunch.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Woods",
+          "note": "A Bangalow favourite for a long breakfast or lunch.",
+          "distance": "5 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Things to do",
+      "items": [
+        {
+          "name": "Minyon Falls lookout, Nightcap National Park",
+          "note": "A big waterfall in World Heritage rainforest. Take a picnic.",
+          "distance": "35 min drive"
+        },
+        {
+          "name": "Bangalow Farmers Market",
+          "note": "Saturday mornings, behind the Bangalow Hotel. Local produce and a good wander.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Bangalow Markets",
+          "note": "Held monthly on a Sunday. Check the date before you go.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Crystal Castle and Shambhala Gardens",
+          "note": "Gardens and crystals near Mullumbimby.",
+          "distance": "30 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Coffee",
+      "items": [
+        {
+          "name": "Sparrow Coffee",
+          "note": "Good coffee on Byron Street.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Bangalow Bread Co.",
+          "note": "Grab fresh bread and a coffee for the morning.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Butcher Baker",
+          "note": "A local breakfast and coffee stop in town.",
+          "distance": "5 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Beaches",
+      "items": [
+        {
+          "name": "Main Beach, Byron Bay",
+          "note": "The classic Byron beach, with cafes and shops close by.",
+          "distance": "15 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Walks",
+      "items": [
+        {
+          "name": "Piccabeen Park (Bangalow Weir)",
+          "note": "A popular picnic spot by the water.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Bangalow heritage walk",
+          "note": "A stroll past the village's old buildings.",
+          "distance": "5 min drive"
+        }
+      ]
+    },
+    {
+      "category": "Rainy day",
+      "items": [
+        {
+          "name": "Heritage House Museum",
+          "note": "A small local museum about Bangalow's past.",
+          "distance": "5 min drive"
+        },
+        {
+          "name": "Bangalow Pub",
+          "note": "Dry, warm and relaxed for a long lunch.",
+          "distance": "5 min drive"
+        }
+      ]
+    }
+  ],
+  "checkout": {
+    "time": "10:00",
+    "steps": [
+      "Strip the beds and leave the linen in a pile",
+      "Wash up and put dishes away",
+      "Take your rubbish and recycling to the bins by the gate",
+      "Close all windows and turn off the lights",
+      "Pull the bath plug and wipe the bath dry",
+      "Check the TV for how to lock up, then pull the door closed"
+    ]
+  },
+  "emergency": [
+    {
+      "name": "Emergency (police, fire, ambulance)",
+      "phone": "000"
+    },
+    {
+      "name": "Byron Central Hospital, 54 Ewingsdale Road, Ewingsdale",
+      "phone": "(02) 6639 9400"
+    }
+  ]
+}

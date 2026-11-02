@@ -1,0 +1,29 @@
+{
+  "_about": "Your own buttons for the guest agent (agent level plus or open). The agent may pick one; the code checks the params before anything runs. Only add what you'd let any guest press. README, 'Agent levels'.",
+  "actions": [
+    {
+      "id": "outdoor_lights",
+      "label": "Turn on the deck lights for 2 hours",
+      "params": {},
+      "run": { "home_assistant": "script.turn_on", "url": "http://homeassistant.local:8123", "data": { "entity_id": "script.deck_lights_2h" } }
+    },
+    {
+      "id": "pool_heater",
+      "label": "Heat the pool",
+      "params": { "hours": { "type": "int", "min": 1, "max": 4 } },
+      "confirm": true,
+      "run": { "webhook": "http://homeassistant.local:8123/api/webhook/pool-heat" }
+    },
+    {
+      "id": "dinner_request",
+      "label": "Ask the host to book dinner",
+      "params": {
+        "place": { "type": "text", "max_chars": 40 },
+        "people": { "type": "int", "min": 1, "max": 10 },
+        "when": { "type": "text", "max_chars": 30 }
+      },
+      "confirm": true,
+      "run": { "webhook": "https://hooks.example.com/your-own-n8n-or-zapier-hook" }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+# Keeps guest-tv running on Linux (a Raspberry Pi works), and starts it again after a restart.
+#   1. Replace FOLDER (twice) with the full path to this guest-tv folder, and USER with your user.
+#   2. sudo cp guest-tv.service /etc/systemd/system/ && sudo systemctl enable --now guest-tv
+[Unit]
+Description=guest-tv
+After=network-online.target
+
+[Service]
+User=USER
+WorkingDirectory=FOLDER
+ExecStart=FOLDER/.venv/bin/python server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
