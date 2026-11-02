@@ -45,11 +45,15 @@ guest's phone browser, with nothing to install, and only works on your Wi-Fi.
 
 ## Will it work on my TV?
 
-| Your TV | Welcome screen | Guest remote and agent | Guest profile picker |
+The phone side (aircon, lights, the house guide, dinner picks and booking) runs on the phone and
+the computer. It never touches the TV, so it works whatever TV you have. Only the TV screen and the
+TV buttons depend on the brand:
+
+| Your TV | Welcome screen | TV buttons, apps and shows from the phone | Guest profile picker |
 |---|---|---|---|
 | **Google TV or Android TV** (TCL, Hisense, Sony, Philips, Kogan, Chromecast with Google TV and others) | Yes, with the couch-tv TV app | Yes | Yes (Stan tested; Netflix by profile position) |
 | **Fire TV** | Not tried. The couch-tv TV app runs on Fire OS | Should work (it uses ADB), not tried | Not tried |
-| **Samsung, LG** | Not tried. It is a web page, so the TV's browser may show it | No. The TV controls need ADB, which these TVs do not have | No |
+| **Samsung, LG** | Coming: an app the computer opens each time the TV comes on, as couch-tv does | Coming, as couch-tv does | Samsung: no, it cannot read its own screen |
 
 Built and tested on a TCL and a Toshiba, both Android TV 11, in November 2026. If you run it on
 something else, please open an issue saying how it went.
@@ -63,7 +67,8 @@ anything for you and never picks the Open level for you.
 
 ## What you need
 
-- **A Google TV or Android TV** with Developer options and debugging on (step 1).
+- **A Google TV or Android TV** with Developer options and debugging on (step 1), for the TV screen and
+  buttons. The phone side works with any TV.
 - **A computer that stays on**, on the same Wi-Fi: a Mac, a Linux box or a Raspberry Pi. It runs the
   TV page, the remote and the agent, so it must never sleep. **Python 3.10 or newer**
   (`python3 --version`; tested on 3.11). Missing or older: on macOS `brew install python@3.11` or
@@ -351,8 +356,8 @@ the TV: couch-tv TV app shows /tv/ (the welcome screen)
 
 ## Limits
 
-- The TV controls need ADB, so they work on Google TV and Android TV. Samsung and LG are not
-  supported.
+- The TV buttons and the welcome screen need ADB today, so they work on Google TV and Android TV.
+  Samsung and LG are on the way. The phone side works with any TV.
 - Some Google TV models keep Google's own home on the Home button even after `tools/tv_app.py home`.
   couch-tv's `apply.sh` can switch Google's home off if you need that.
 - Aircon is AirTouch 5 only so far. Other aircon can be added as your own action (Plus level) through
