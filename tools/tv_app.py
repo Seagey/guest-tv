@@ -10,6 +10,10 @@ it. Here it shows guest-tv instead of couch-tv, and can become the TV's home scr
     TV_IP=<tv address> .venv/bin/python tools/tv_app.py home [--home guest]  # and make it the TV's home
     TV_IP=<tv address> .venv/bin/python tools/tv_app.py undo [--remove]      # put the old home back
 
+Fire TV (Fire OS 6 and newer, a couch-tv release newer than 0.3): the same commands. Amazon's Home key ignores
+the default home, so `home` also switches on the couch-tv app's Home button watch, and `undo`
+switches it off. Amazon's home still flashes up for a moment before guest-tv comes back.
+
 Samsung and LG (TV_KIND=samsung or lg, or "tv_kind" in data/settings.json): these TVs let no app
 replace their home screen, so guest-tv is an app the computer opens each time the TV comes on.
 
@@ -53,6 +57,33 @@ def current_home(tv):
 
 def installed(tv):
     return ("package:" + APP) in tv.sh("pm list packages " + APP, 15)
+
+
+FIRE_HOME = "com.amazon.tv.launcher"
+WATCH = (APP + "/.FireWatch", APP + "/" + APP + ".FireWatch")   # how Android may write it down
+
+
+def is_fire(tv):
+    return ("package:" + FIRE_HOME) in tv.sh("pm list packages " + FIRE_HOME, 15)
+
+
+def fire_watch(tv, on):
+    """Fire TV starts Amazon's home from the Home key and ignores the default home, so the couch-tv
+    app's own watcher (an accessibility service that only sees which window came forward) puts
+    guest-tv back on top. Switched on and off here over ADB. Android drops the watcher whenever the
+    app is stopped or updated, so this runs after the app is opened, and the secure-settings grant
+    lets the app put it back by itself after updates and reboots. Off takes the grant away first."""
+    tv.sh("pm %s %s android.permission.WRITE_SECURE_SETTINGS" % ("grant" if on else "revoke", APP), 10)
+    cur = tv.sh("settings get secure enabled_accessibility_services", 10).strip()
+    keep = [s for s in cur.split(":") if s and s != "null" and s not in WATCH]
+    if on:
+        keep.append(WATCH[0])
+    if keep:
+        tv.sh("settings put secure enabled_accessibility_services '%s'" % ":".join(keep), 10)
+    else:
+        tv.sh("settings delete secure enabled_accessibility_services", 10)
+    if on:
+        tv.sh("settings put secure accessibility_enabled 1", 10)
 
 
 def install(tv, apk):
@@ -247,6 +278,9 @@ def main():
                 print("Old home written down:", before)
             tv.sh("cmd package set-home-activity " + ACT, 15)
         open_page(tv, url, home_id)
+        if cmd == "home" and is_fire(tv):   # after open_page: its force-stop drops the watcher
+            fire_watch(tv, True)
+            print("Fire TV: Amazon's home will flash up for a moment after Home, then guest-tv comes back.")
         time.sleep(3)
         print("Showing %s/tv/?tv=%s on the TV." % (url, home_id) + (" The Home button now comes back here." if cmd == "home" else ""))
     elif cmd == "undo":
@@ -257,6 +291,9 @@ def main():
             print("Home put back:", before)
         else:
             print("No old home written down for this TV. Pick the home in the TV's Settings (Apps, Default apps, Home).")
+        if is_fire(tv):
+            fire_watch(tv, False)
+            print("Fire TV: the Home button opens Amazon's home again.")
         if "--remove" in sys.argv:
             print(tv.sh("pm uninstall " + APP, 30).strip())
         tv.sh("input keyevent KEYCODE_HOME", 8)
