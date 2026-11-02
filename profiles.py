@@ -78,7 +78,7 @@ class Watcher(threading.Thread):
         return self.dev.shell(cmd, timeout_s=t, read_timeout_s=t)
 
     def front(self):
-        out = self.sh("dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'", 8)   # Android 11 says mResumedActivity
+        out = self.sh("dumpsys activity activities | grep -m1 -E 'ResumedActivity'", 8)   # topResumedActivity, mResumedActivity or plain ResumedActivity, by Android version
         m = re.search(r"u0 ([^/\s]+)/", out)
         return m.group(1) if m else None
 

@@ -36,8 +36,9 @@ KEYS = {"up": "DPAD_UP", "down": "DPAD_DOWN", "left": "DPAD_LEFT", "right": "DPA
 
 
 class TV:
-    def __init__(self, ip):
+    def __init__(self, ip, auth_timeout=8):
         self.ip = ip
+        self.auth_timeout = auth_timeout   # longer the first time, while someone presses Allow on the TV
         self.dev = None
         self.lock = threading.Lock()
         self.pkgs = (0, set())
@@ -48,7 +49,7 @@ class TV:
         priv = open(os.path.expanduser("~/.android/adbkey")).read()
         pub = open(os.path.expanduser("~/.android/adbkey.pub")).read()
         d = AdbDeviceTcp(self.ip, 5555, default_transport_timeout_s=8)
-        d.connect(rsa_keys=[PythonRSASigner(pub, priv)], auth_timeout_s=8)
+        d.connect(rsa_keys=[PythonRSASigner(pub, priv)], auth_timeout_s=self.auth_timeout)
         self.dev = d
 
     def sh(self, cmd, t=20):
@@ -77,7 +78,7 @@ class TV:
         return [a for a in APPS if a["package"] in pk]
 
     def front(self):
-        out = self.sh("dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'", 8)
+        out = self.sh("dumpsys activity activities | grep -m1 -E 'ResumedActivity'", 8)
         m = re.search(r"u0 ([^/\s]+)/", out)
         return m.group(1) if m else None
 

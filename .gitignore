@@ -9,4 +9,7 @@ data/bookings-inbox/
 data/homes/*/film.json
 tools/booking-samples/fake_bookings.jsonl
 tools/booking-samples/test-booking-mcp.json
+tvs/
+.apk-piece
+*.apk
 .DS_Store

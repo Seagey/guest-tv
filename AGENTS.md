@@ -17,6 +17,9 @@ same questions `setup.py` asks, one at a time, in plain words (or let them run `
    to do anything the tools you plug in can do. Do not pick Open for them.
 6. **Agentic booking** (Open only): set up the browser tool, add `"book"` links to the guide, then run
    `tools/booking_agent_test.py` before any guest uses it.
+7. **Put it on the TV** with `tools/tv_app.py`: `status` first, then `install couch-tv-home.apk` (the
+   owner downloads it from github.com/Seagey/couch-tv/releases), then `home --home <id>`. Tell the
+   owner that `tools/tv_app.py undo` puts their old home screen back.
 
 Before you finish, say the must-haves out loud: everything on one Wi-Fi, the computer never sleeps,
 Claude Code stays signed in.

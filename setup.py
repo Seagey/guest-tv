@@ -94,12 +94,22 @@ def checks(tv_ip=None):
             line(True, "Python package %s" % pkg)
         except ImportError:
             line(False, "Python package %s" % pkg, ".venv/bin/pip install %s" % pkg)
-    if not os.path.isfile(os.path.expanduser("~/.android/adbkey")):
-        line(False, "An ADB key on this computer", "Install Android platform tools and run: adb devices  (once makes the key)")
+    key = os.path.expanduser("~/.android/adbkey")
+    if not os.path.isfile(key):
+        try:   # the key the TV is asked to trust; the same one adb itself would make
+            from adb_shell.auth.keygen import keygen
+            os.makedirs(os.path.dirname(key), exist_ok=True)
+            keygen(key)
+            line(True, "Made an ADB key for this computer (~/.android/adbkey)")
+        except Exception:
+            line(False, "An ADB key on this computer", "Install Android platform tools and run: adb devices  (once makes the key)")
+    else:
+        line(True, "ADB key on this computer")
     if tv_ip:
         try:
             import tvctl
-            line("ok" in tvctl.TV(tv_ip).sh("echo ok", 10), "The TV at %s answers over ADB" % tv_ip)
+            say("  ...   Connecting to the TV. If it asks \"Allow debugging?\", tick Always allow and press OK (60 s).")
+            line("ok" in tvctl.TV(tv_ip, auth_timeout=60).sh("echo ok", 10), "The TV at %s answers over ADB" % tv_ip)
         except Exception as e:
             line(False, "The TV at %s answers over ADB (%s)" % (tv_ip, type(e).__name__),
                  "On the TV: Settings > System > About, press Build 7 times, then Developer options > USB debugging on.\n"
@@ -285,9 +295,12 @@ def main():
     jwrite(os.path.join(DATA, "private.json"), pv)
     say("\nSaved data/settings.json and data/private.json.")
     checks(st.get("tv"))
-    say("\nNext:\n  1. Start it: .venv/bin/python server.py\n  2. On the TV, open http://<this computer>:%d/tv/?home=%s (or the couch-tv TV app)\n"
+    tv = st.get("tv") or "<tv address>"
+    say("\nNext (README, Setup steps 4 to 6):\n  1. Start it: .venv/bin/python server.py  (keep it running: service/)\n"
+        "  2. Put it on the TV: TV_IP=%s .venv/bin/python tools/tv_app.py install couch-tv-home.apk\n"
+        "                       TV_IP=%s .venv/bin/python tools/tv_app.py home --home %s\n"
         "  3. Scan the Guest remote code on the TV with your phone and try the Ask box.\n"
-        "  4. Test the agent's guard rails: .venv/bin/python tools/agent_test.py" % (st.get("port", 5410), hid))
+        "  4. Test the agent's guard rails: .venv/bin/python tools/agent_test.py" % (tv, tv, hid))
 
 
 if __name__ == "__main__":
