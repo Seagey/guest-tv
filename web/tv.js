@@ -16,6 +16,8 @@
   var area = "cards", idx = 0, appIdx = 0;
   var sheet = null;   // {id, nav: [...], navIdx, zoneIdx, inMain}
   var TVOS = window.TVOS || null;   // the couch-tv TV app gives the page apps() and launch()
+  var BRAND = QS.brand || "";   // "samsung" or "lg": the guest-tv app there; apps open through the computer
+  var BRAND_APPS = null;
 
   function api(path, body) {
     var url = "/api/" + path + (path.indexOf("?") >= 0 ? "&" : "?") + "home=" + encodeURIComponent(HOME) +
@@ -266,7 +268,9 @@
     "au.com.streamotion.ares", "com.cbs.ca", "au.com.seven", "au.com.nine.jumpin", "au.com.tenplay"];
   function drawApps() {
     var list = [];
-    if (TVOS && TVOS.apps) {
+    if (BRAND) {
+      list = (BRAND_APPS || []).map(function (a) { return { name: a.name, app: a.id }; });
+    } else if (TVOS && TVOS.apps) {
       try {
         var all = JSON.parse(TVOS.apps());
         list = all.filter(function (a) { return PREFER.indexOf(a.package) >= 0; })
@@ -312,6 +316,12 @@
     if (!a) return;
     if (a.sheet) { openSheet(a.sheet); return; }
     if (TVOS && TVOS.launch && a.pkg) { TVOS.launch(a.pkg); return; }
+    if (BRAND && a.app) {
+      toast("Opening " + a.name);
+      api("tv/app", { app: a.app }).then(function (r) { if (!r.ok) toast(r.error || a.name + " did not open"); },
+        function () { toast(a.name + " did not open"); });
+      return;
+    }
     toast(a.name + " opens here on the TV");
   }
   var toastT = 0;
@@ -492,7 +502,7 @@
     if (ARROWS[e.key]) return ARROWS[e.key];
     if (CODES[e.keyCode]) return CODES[e.keyCode];
     if (e.key === "Enter" || e.key === " " || e.keyCode === 13 || e.keyCode === 23) return "ok";
-    if (e.key === "Escape" || e.key === "Backspace" || e.key === "GoBack" || e.key === "BrowserBack" || e.keyCode === 27 || e.keyCode === 8 || e.keyCode === 10009) return "back";
+    if (e.key === "Escape" || e.key === "Backspace" || e.key === "GoBack" || e.key === "BrowserBack" || e.keyCode === 27 || e.keyCode === 8 || e.keyCode === 10009 || e.keyCode === 461) return "back";
     return null;
   }
   var restT = 0, REST_MS = QS.rest ? +QS.rest * 1000 : 45000;
@@ -505,14 +515,22 @@
   }
   // the couch-tv TV app keeps BACK for itself and calls tv.back() instead
   window.tv = { back: function () { if (awake()) return; if (sheet) closeSheet(); } };
-  document.addEventListener("keydown", function (e) {
-    var k = keyOf(e);
-    if (!k) return;
-    e.preventDefault();
+  function onKey(k) {
     document.body.classList.remove("mouse");
     if (awake()) return;   // the first press only wakes the screen
     if (sheet) sheetKey(k);
     else if (k !== "back") homeKey(k);
+  }
+  document.addEventListener("keydown", function (e) {
+    var k = keyOf(e);
+    if (!k) return;
+    e.preventDefault();
+    onKey(k);
+  });
+  // the Samsung and LG app passes on keys that reached it instead of this page
+  window.addEventListener("message", function (e) {
+    var k = e.source === window.parent && e.data && e.data.guestKey;
+    if (k === "left" || k === "right" || k === "up" || k === "down" || k === "ok" || k === "back") onKey(k);
   });
 
   // a mouse or a touch screen works too (handy for the preview)
@@ -533,6 +551,7 @@
 
   // ---------------------------------------------------------------- data
   function refreshState() {
+    if (BRAND) api("tv/apps").then(function (r) { BRAND_APPS = r.apps || []; if (S && !sheet) drawApps(); }, function () {});
     return api("state").then(function (s) {
       if (s.error) { $("welcome").textContent = s.error; return; }
       var first = !S || S.id !== s.id;
@@ -556,6 +575,43 @@
       if (sheet && sheet.id === "climate") { $("sheet-main").innerHTML = zonesHtml(); drawSheet(); }
       else refreshCard("climate");
     });
+  }
+
+  // ---------------------------------------------------------------- old TV browsers
+  // Samsung and LG TVs from 2021 and before (Chromium 79 and older) ignore `gap` in a flex row, so
+  // tiles touch. There the gaps are put back as margins, after every change to the page.
+  function flexGapWorks() {
+    var d = document.createElement("div");
+    d.style.cssText = "display:flex;flex-direction:column;row-gap:1px;position:absolute";
+    d.appendChild(document.createElement("div"));
+    d.appendChild(document.createElement("div"));
+    document.body.appendChild(d);
+    var ok = d.scrollHeight === 1;
+    document.body.removeChild(d);
+    return ok;
+  }
+  function fakeGaps() {
+    var all = document.body.querySelectorAll("*");
+    for (var i = 0; i < all.length; i++) {
+      var cs = getComputedStyle(all[i]);
+      if (cs.display.indexOf("flex") < 0) continue;
+      var col = cs.flexDirection.indexOf("column") === 0;
+      var g = parseFloat(col ? cs.rowGap : cs.columnGap) || 0;
+      if (!g) continue;
+      var kids = all[i].children, side = col ? "marginTop" : "marginLeft";
+      for (var j = 1; j < kids.length; j++) {
+        if (kids[j].getAttribute("data-gap") || !parseFloat(getComputedStyle(kids[j])[side])) {
+          kids[j].style[side] = g + "px";
+          kids[j].setAttribute("data-gap", "1");
+        }
+      }
+    }
+  }
+  if (window.MutationObserver && !flexGapWorks()) {
+    var gapT = 0;
+    new MutationObserver(function () { clearTimeout(gapT); gapT = setTimeout(fakeGaps, 50); })
+      .observe(document.body, { childList: true, subtree: true });
+    fakeGaps();
   }
 
   refreshState().then(function () { refreshAircon(); });

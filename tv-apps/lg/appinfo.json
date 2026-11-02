@@ -1,0 +1,13 @@
+{
+  "id": "app.guesttv.home",
+  "version": "1.0.0",
+  "vendor": "guest-tv",
+  "type": "web",
+  "main": "boot.html",
+  "title": "Guest TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#14161d",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}

@@ -53,10 +53,13 @@ TV buttons depend on the brand:
 |---|---|---|---|
 | **Google TV or Android TV** (TCL, Hisense, Sony, Philips, Kogan, Chromecast with Google TV and others) | Yes, with the couch-tv TV app | Yes | Yes (Stan tested; Netflix by profile position) |
 | **Fire TV** | Not tried. The couch-tv TV app runs on Fire OS | Should work (it uses ADB), not tried | Not tried |
-| **Samsung, LG** | Coming: an app the computer opens each time the TV comes on, as couch-tv does | Coming, as couch-tv does | Samsung: no, it cannot read its own screen |
+| **Samsung** (Tizen, 2016 and later) | Yes, as an app the computer opens each time the TV comes on ([Samsung and LG](#samsung-and-lg)) | Yes. Netflix and YouTube open the show; other apps open on their home page | No. Samsung gives no way to read the screen |
+| **LG** (webOS) | Built the same way, through LG's Developer Mode. Not yet tried on a real LG | Built, not yet tried on a real LG | No |
 
-Built and tested on a TCL and a Toshiba, both Android TV 11, in November 2026. If you run it on
-something else, please open an issue saying how it went.
+Built and tested on a TCL and a Toshiba, both Android TV 11, in November 2026. The Samsung and LG
+parts were tested against stand-in TVs on the computer (`tools/brands_test.py`), the same way
+couch-tv's were before they met a real TV. If you run it on something else, please open an issue
+saying how it went.
 
 ## Setting it up with an AI agent
 
@@ -67,8 +70,8 @@ anything for you and never picks the Open level for you.
 
 ## What you need
 
-- **A Google TV or Android TV** with Developer options and debugging on (step 1), for the TV screen and
-  buttons. The phone side works with any TV.
+- **A TV**: a Google TV or Android TV with Developer options and debugging on (step 1), or a Samsung
+  or LG ([Samsung and LG](#samsung-and-lg)). The phone side works with any TV.
 - **A computer that stays on**, on the same Wi-Fi: a Mac, a Linux box or a Raspberry Pi. It runs the
   TV page, the remote and the agent, so it must never sleep. **Python 3.10 or newer**
   (`python3 --version`; tested on 3.11). Missing or older: on macOS `brew install python@3.11` or
@@ -86,6 +89,9 @@ anything for you and never picks the Open level for you.
 ## Setup
 
 ### Step 1. Developer mode on the TV
+
+Samsung or LG: do steps 2 to 4, then follow [Samsung and LG](#samsung-and-lg) instead of steps 1
+and 5.
 
 1. On the TV: **Settings, System, About**. Move to **Android TV OS build** (or **Build**) and press
    OK seven times, until it says you are a developer.
@@ -112,7 +118,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 It checks the must-haves first (Claude Code signed in, the computer never sleeps, the packages, the
 ADB key, the TV answers) and says how to fix anything missing. Then it asks: a guest room or a
-stay, the host's name, the guest Wi-Fi, the Airbnb calendar link (stays only), the TV's address,
+stay, the host's name, the guest Wi-Fi, the Airbnb calendar link (stays only), the TV's brand and address,
 which rooms guests may control for the aircon and the lights, which streaming apps are signed in,
 and the agent level. Run it again any time to change an answer; `setup.py --check` only checks.
 
@@ -155,6 +161,75 @@ Then stop the service if you installed one (Mac: `launchctl bootout gui/$(id -u)
 `sudo systemctl disable --now guest-tv`). Nothing on the TV was switched off or deleted, so there is
 nothing else to put back. With only the TV remote: in **Settings, Apps**, find the default **Home**
 app setting (the menu name varies by TV) and pick the old home.
+
+## Samsung and LG
+
+Samsung and LG let no app replace their home screen. So on these TVs guest-tv is **an app the
+computer opens each time the TV comes on**, the way couch-tv works there:
+
+- **The guest-tv app** (`tv-apps/`): one small page that shows the welcome screen from the computer,
+  full screen. If the computer is off it says "Waiting for the house computer" and keeps trying.
+- **The hook**: `server.py` checks the TV every 2 seconds. When the TV comes on and nothing else is
+  on screen (live TV, an input, the TV's menu), it opens guest-tv within a few seconds. It leaves
+  the TV alone when an app is on screen, and for 20 seconds after a guest's own command.
+- **The Guest remote and the agent** reach the TV over its own network remote, from `tvbrands.py`:
+  keys, volume, mute, opening apps. Netflix and YouTube open the show. Other apps open on their home
+  page and the agent says to pick the show there.
+
+Set the brand in `setup.py` (or `"tv_kind": "samsung"` or `"lg"` in `data/settings.json`), then:
+
+### Samsung
+
+1. **Developer Mode on the TV.** Open **Apps**, press **1 2 3 4 5** on the remote, switch
+   **Developer mode** on and type this computer's IP address. Restart the TV by holding the power
+   button until it switches off and on again.
+2. **Get Apps2Samsung** (free, open source) and its command line, `apps2samsung-cli`. It installs
+   the app and signs it with **your own** Samsung account. The first install opens a browser for the
+   Samsung sign-in; guest-tv never sees it.
+3. **Install, pair, open:**
+
+```bash
+TV_KIND=samsung TV_IP=<tv address> .venv/bin/python tools/tv_app.py install
+TV_KIND=samsung TV_IP=<tv address> .venv/bin/python tools/tv_app.py pair
+TV_KIND=samsung TV_IP=<tv address> .venv/bin/python tools/tv_app.py open
+```
+
+`install` builds the app with this computer's address in it and installs it. `pair` makes the TV ask
+"Allow guest-tv to connect?": press **Allow** on the TV (once; the token stays in `data/`). Then
+switch the TV off and on: guest-tv comes up by itself.
+
+On a Frame, Art Mode counts as on, so guest-tv opens when the Frame wakes from standby, not when it
+leaves Art Mode.
+
+### LG
+
+1. **Developer Mode on the TV.** Install LG's **Developer Mode** app from the LG Content Store, sign
+   in with a free LG developer account, switch **Dev Mode Status** on (the TV restarts), then switch
+   **Key Server** on and note the passphrase.
+2. **LG's tools on this computer:**
+
+```bash
+npm install -g @webos-tools/cli
+ares-setup-device -a tv -i "username=prisoner" -i "host=<tv address>" -i "port=9922"
+ares-novacom --device tv --getkey
+```
+
+3. **Install, pair, open:** the same three commands as Samsung with `TV_KIND=lg`. For `pair`, press
+   **Accept** on the TV.
+
+LG removes Developer Mode apps when the Developer Mode session runs out. So once a day, as the TV
+comes on, the computer presses Developer Mode's **Extend** for you (with `ares-launch` when LG's
+tools are installed). **Not yet tried on a real LG**: it was built from LG's documentation and
+couch-tv's LG work, and tested against a stand-in. If you are the first, please open an issue.
+
+### Undo on Samsung or LG
+
+```bash
+TV_KIND=samsung TV_IP=<tv address> .venv/bin/python tools/tv_app.py undo --remove
+```
+
+That removes the guest-tv app. Add `"tv_hook": false` to `data/settings.json` (or stop
+`server.py`) and the computer stops opening it. Nothing else on the TV was changed.
 
 ## What guests can control
 
@@ -314,12 +389,12 @@ private shows on camera. Set it back to `false` when you're done.
 guest's phone (/r/ Guest remote, /p/ house info)
         |
         v
-this computer: server.py ----> the TV (ADB: keys, apps, shows, Spotify, the Guest profile)
+this computer: server.py ----> the TV (Google TV over ADB; Samsung and LG over their network remote)
         |        |      \----> aircon (AirTouch 5) and lights (Home Assistant, Hue)
         |        v
         |   guest_agent.py: claude -p, no tools (Locked); the code checks every pick
         v
-the TV: couch-tv TV app shows /tv/ (the welcome screen)
+the TV: the couch-tv TV app (Google TV) or the guest-tv app (Samsung, LG) shows /tv/
 ```
 
 | Path | What it is |
@@ -327,6 +402,8 @@ the TV: couch-tv TV app shows /tv/ (the welcome screen)
 | `server.py` | the pages and the API behind them |
 | `guest_agent.py` | the agent behind the Ask box, and the code that checks what it picks |
 | `tvctl.py` | TV control over ADB, from fixed tables of keys and apps |
+| `tvbrands.py` | the same for Samsung and LG, and the hook that opens guest-tv when the TV comes on |
+| `tv-apps/` | the Samsung and LG app (`tools/tv_app.py build` packs it) |
 | `devices.py` | smart lights (Home Assistant, Hue) and your own actions |
 | `profiles.py` | picks the Guest profile when a streaming app asks "Who's watching?" |
 | `bookings.py` | reads Airbnb booking emails for the guest's name and how many are coming |
@@ -336,7 +413,7 @@ the TV: couch-tv TV app shows /tv/ (the welcome screen)
 | `data/settings.json` | port, weather place, aircon, TV, apps, agent level |
 | `data/private.json` | your Wi-Fi, codes, guest names, tokens, host key. Made on first run, never in git |
 | `data/actions.example.json` | example buttons for agent level Plus |
-| `tools/` | `tv_app.py` (put it on the TV), `tvui.py` (step through the TV by hand), the tests |
+| `tools/` | `tv_app.py` (put it on the TV), `tvui.py` (step through the TV by hand), the tests (`brands_test.py`: Samsung and LG stand-ins) |
 | `service/` | keep it running on a Mac (launchd) or Linux (systemd) |
 | `web/` | the TV page, the phone pages, fonts and the demo photos |
 
@@ -356,8 +433,9 @@ the TV: couch-tv TV app shows /tv/ (the welcome screen)
 
 ## Limits
 
-- The TV buttons and the welcome screen need ADB today, so they work on Google TV and Android TV.
-  Samsung and LG are on the way. The phone side works with any TV.
+- Samsung and LG: guest-tv is an app that opens itself, not a home screen, so the TV's own Home
+  button still opens the TV's menu. No Guest profile picker there, and Spotify only opens.
+- LG is built but not yet tried on a real LG.
 - Some Google TV models keep Google's own home on the Home button even after `tools/tv_app.py home`.
   couch-tv's `apply.sh` can switch Google's home off if you need that.
 - Aircon is AirTouch 5 only so far. Other aircon can be added as your own action (Plus level) through

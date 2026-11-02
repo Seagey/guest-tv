@@ -2,3 +2,5 @@ segno
 adb-shell
 rsa
 airtouch5py
+websocket-client
+# tools/brands_test.py also needs: websockets

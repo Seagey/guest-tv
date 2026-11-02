@@ -136,10 +136,16 @@ class TV:
 _tvs = {}
 
 
-def tv_for(ip):
-    if ip not in _tvs:
-        _tvs[ip] = TV(ip)
-    return _tvs[ip]
+def tv_for(ip, kind=None):
+    """The TV at this address. kind "samsung" or "lg" gives tvbrands' version of the same calls."""
+    k = (kind or "android", ip)
+    if k not in _tvs:
+        if kind in ("samsung", "lg"):
+            import tvbrands
+            _tvs[k] = tvbrands.SamsungTV(ip) if kind == "samsung" else tvbrands.LGTV(ip)
+        else:
+            _tvs[k] = TV(ip)
+    return _tvs[k]
 
 
 # ---------------------------------------------------------------- where a show streams (JustWatch, AU)

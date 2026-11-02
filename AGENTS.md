@@ -8,7 +8,8 @@ Run `.venv/bin/python setup.py --check` first and fix anything marked FIX. Then 
 same questions `setup.py` asks, one at a time, in plain words (or let them run `setup.py` themselves):
 
 1. **What kind of place?** A guest room in their home, or a place guests stay in (Airbnb, holiday home).
-2. **Which TV?** Its IP address (TV Settings, Network, About). Check it answers over ADB.
+2. **Which TV?** Its brand (Google TV or Android TV, Samsung, LG) and its IP address (TV Settings,
+   Network, About). Google TV: check it answers over ADB. Samsung or LG: README "Samsung and LG".
 3. **What may guests control?** Aircon, lights, anything else. For each: **which rooms** (their room,
    all rooms, or a list). For lights: Home Assistant (best, it covers most brands) or Hue direct.
 4. **Which streaming apps are signed in** on that TV (only those are offered to guests).
@@ -19,7 +20,9 @@ same questions `setup.py` asks, one at a time, in plain words (or let them run `
    `tools/booking_agent_test.py` before any guest uses it.
 7. **Put it on the TV** with `tools/tv_app.py`: `status` first, then `install couch-tv-home.apk` (the
    owner downloads it from github.com/Seagey/couch-tv/releases), then `home --home <id>`. Tell the
-   owner that `tools/tv_app.py undo` puts their old home screen back.
+   owner that `tools/tv_app.py undo` puts their old home screen back. Samsung or LG: `install`,
+   `pair` (the owner presses Allow or Accept on the TV), `open`, with `TV_KIND` set (README
+   "Samsung and LG"). The Samsung install opens a browser for the owner's Samsung sign-in.
 
 Before you finish, say the must-haves out loud: everything on one Wi-Fi, the computer never sleeps,
 Claude Code stays signed in.
@@ -55,6 +58,15 @@ Claude Code stays signed in.
 - Test booking only against `tools/booking-samples/fake_restaurant.py`. Never make a real booking to
   test, and never at a real restaurant without the owner asking.
 - After changing lights or actions, run `tools/devices_test.py` (no AI, a few seconds).
+
+## Samsung and LG (tvbrands.py, tv-apps/)
+
+- Same calls as `tvctl.TV`, so `guest_agent.py` and the remote need no change. A new key or app goes
+  in the fixed tables at the top of `tvbrands.py`, never as text from a guest.
+- After any change, run `tools/brands_test.py` (stand-in Samsung and LG, no AI, about 20 seconds).
+- Never pair, install or test on a real TV without the owner at it, and mute it first.
+- A TV that already has another app opening itself (couch-tv's hook): set `"tv_hook": false` for that
+  TV, or the two hooks fight over the screen.
 
 ## Booking emails (bookings.py)
 

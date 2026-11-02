@@ -494,6 +494,24 @@ def tv_ip(h):
     return os.environ.get("GUEST_TV_IP") or h.get("tv") or settings().get("tv") or (settings().get("profiles") or {}).get("tv")
 
 
+def tv_kind(h):
+    """"android" (Google TV, Android TV: ADB), "samsung" or "lg" (tvbrands.py)."""
+    return os.environ.get("GUEST_TV_KIND") or h.get("tv_kind") or settings().get("tv_kind") or "android"
+
+
+def start_tv_watchers():
+    """Samsung and LG: open the guest-tv app each time the TV comes on (tvbrands.watch). One watcher
+    per TV. "tv_hook": false (per home or in settings.json) leaves the TV alone."""
+    import tvbrands, tvctl
+    seen = set()
+    for hid in home_ids():
+        h = load_home(hid)
+        ip, kind = tv_ip(h), tv_kind(h)
+        if kind in ("samsung", "lg") and ip and (kind, ip) not in seen and h.get("tv_hook", settings().get("tv_hook", True)) is not False:
+            seen.add((kind, ip))
+            threading.Thread(target=tvbrands.watch, args=(tvctl.tv_for(ip, kind),), daemon=True).start()
+
+
 def control(h, what):
     """Which rooms a guest may control for one kind of device: "their room" (default), "all", a list
     of room names, or "none". Set per home or in settings.json as "control": {"aircon": ..., "lights": ...}."""
@@ -576,7 +594,7 @@ def guest_apps(h, tv):
 
 def remote_ctx(h):
     import tvctl
-    tv = tvctl.tv_for(tv_ip(h))
+    tv = tvctl.tv_for(tv_ip(h), tv_kind(h))
     try:
         apps = guest_apps(h, tv)
     except Exception:
@@ -630,7 +648,7 @@ class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-    def send(self, code, body, ctype="application/json", cache="no-store"):
+    def send(self, code, body, ctype="application/json", cache="no-store", cors=False):
         if isinstance(body, (dict, list)):
             body = json.dumps(body, ensure_ascii=False).encode()
         elif isinstance(body, str):
@@ -639,6 +657,8 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Cache-Control", cache)
         self.send_header("Content-Length", str(len(body)))
+        if cors:   # the Samsung and LG app asks from its own origin whether the computer is up
+            self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
@@ -659,7 +679,7 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Location", "/tv/")
             return self.end_headers()
         if path == "/api/health":
-            return self.send(200, {"ok": True, "app": "guest-tv"})
+            return self.send(200, {"ok": True, "app": "guest-tv"}, cors=True)
         if path == "/api/state":
             h = self.home(qs)
             return self.send(200, public_state(h, self.is_host(qs), qs.get("phase")) if h else {"error": "no such home"}, cache="no-store")
@@ -682,6 +702,24 @@ class H(BaseHTTPRequestHandler):
                 "guest": s.get("guest", ""), "until": s.get("checkout") if h.get("mode") != "guest" else None,
                 "tv_on": ctx["tv_on"], "apps": [{"id": a["id"], "name": a["name"]} for a in ctx["apps"]],
                 "rooms": ctx["rooms"], "places": ctx["places"], "level": ctx["level"], "ask_limit": 20})
+        if path == "/api/tv/apps":   # the TV page on a Samsung or LG: the app row (they open through here)
+            h = self.home(qs)
+            import tvctl
+            try:
+                apps = guest_apps(h, tvctl.tv_for(tv_ip(h), tv_kind(h))) if h and tv_ip(h) else []
+            except Exception:
+                apps = []
+            return self.send(200, {"apps": [{"id": a["id"], "name": a["name"]} for a in apps]})
+        if path == "/api/tv/status":   # host: what the TV is doing and what the Samsung or LG watcher did
+            h = self.home(qs)
+            if not self.is_host(qs) or not h:
+                return self.send(403, {"error": "host key needed"})
+            import tvctl
+            tv = tvctl.tv_for(tv_ip(h), tv_kind(h))
+            out = {"kind": tv_kind(h), "ip": tv_ip(h)}
+            if hasattr(tv, "is_on"):
+                out.update(on=tv.is_on(), front=tv.front() if tv.is_on() else None, log=tv.log)
+            return self.send(200, out)
         if path == "/api/weather":
             return self.send(200, weather())
         if path == "/api/aircon":
@@ -722,7 +760,7 @@ class H(BaseHTTPRequestHandler):
         import guest_agent, tvctl
         if not self.remote_ok(h, qs):
             return self.send(403, {"error": "This remote has ended. Scan the code on the TV again."})
-        tv = tvctl.tv_for(tv_ip(h))
+        tv = tvctl.tv_for(tv_ip(h), tv_kind(h))
         try:
             if path == "/api/r/key" and body.get("key") in tvctl.KEYS:
                 tv.key(body["key"])
@@ -761,6 +799,16 @@ class H(BaseHTTPRequestHandler):
         h = self.home(qs)
         if not h:
             return self.send(404, {"error": "no such home"})
+        if path == "/api/tv/app":   # the TV page on a Samsung or LG opens an app through the computer
+            import tvctl
+            tv = tvctl.tv_for(tv_ip(h), tv_kind(h))
+            try:
+                if body.get("app") not in {a["id"] for a in guest_apps(h, tv)}:
+                    return self.send(200, {"ok": False, "error": "That app is not on this TV"})
+                tv.open_app(body["app"])
+                return self.send(200, {"ok": True})
+            except Exception:
+                return self.send(200, {"ok": False, "error": "The TV didn't answer"})
         if path.startswith("/api/r/"):   # Guest remote actions: only with this stay's code
             return self.remote_post(path, h, qs, body)
         if path == "/api/remote/reset":   # host: a new Guest remote link for the guest room (old ones stop)
@@ -803,6 +851,7 @@ if __name__ == "__main__":
     import profiles
     profiles.start(settings())   # picks the guest profile in streaming apps on the guest TV
     threading.Thread(target=booking_loop, daemon=True).start()   # guest names from booking emails
+    start_tv_watchers()   # Samsung and LG: open guest-tv when the TV comes on
     srv = ThreadingHTTPServer((os.environ.get("HOST", "0.0.0.0"), PORT), H)
     print("guest-tv on http://%s:%d/tv/  (phone: /p/)" % (local_name(), PORT), flush=True)
     srv.serve_forever()

@@ -64,7 +64,7 @@ def http(method, url, body=None, headers=None):
 
 # ---------------------------------------------------------------- must-haves
 
-def checks(tv_ip=None):
+def checks(tv_ip=None, tv_kind="android"):
     say("\nThe must-haves")
     say("--------------")
     good = True
@@ -88,6 +88,8 @@ def checks(tv_ip=None):
              "System Settings > Energy: turn on 'Prevent automatic sleeping', or run: sudo pmset -a sleep 0")
     else:
         say("  INFO This computer must stay on and never sleep. It runs the TV page, the remote and the agent.")
+    if tv_kind in ("samsung", "lg"):
+        return brand_checks(line, tv_ip, tv_kind) and good
     for mod, pkg in (("segno", "segno"), ("adb_shell", "adb-shell"), ("rsa", "rsa")):
         try:
             __import__(mod)
@@ -115,6 +117,40 @@ def checks(tv_ip=None):
                  "On the TV: Settings > System > About, press Build 7 times, then Developer options > USB debugging on.\n"
                  "         Then run this again and press Allow on the TV.")
     return good
+
+
+def brand_checks(line, tv_ip, kind):
+    """Samsung and LG: no ADB. The TV's network remote, accepted once on the TV."""
+    for mod, pkg in (("segno", "segno"), ("websocket", "websocket-client")):
+        try:
+            __import__(mod)
+            line(True, "Python package %s" % pkg)
+        except ImportError:
+            line(False, "Python package %s" % pkg, ".venv/bin/pip install %s" % pkg)
+    sys.path.insert(0, HERE)
+    import tvbrands
+    if kind == "samsung":
+        cli = shutil.which("apps2samsung-cli") or os.path.expanduser("~/Applications/apps2samsung/cli/apps2samsung-cli")
+        line(os.path.exists(cli), "Apps2Samsung, to install the app on the TV",
+             "Download it (free): README, 'Samsung and LG'. It signs the app with your own Samsung account.")
+    else:
+        line(bool(shutil.which("ares-install")), "LG's ares tools, to install the app on the TV",
+             "npm install -g @webos-tools/cli, then Developer Mode on the TV (README, 'Samsung and LG')")
+    pair = "Run: TV_KIND=%s TV_IP=%s .venv/bin/python tools/tv_app.py pair" % (kind, tv_ip)
+    if tv_ip and kind == "samsung":
+        tv = tvbrands.SamsungTV(tv_ip)
+        line(tv.is_on() is not None, "The Samsung TV at %s answers on the Wi-Fi" % tv_ip,
+             "Switch the TV on. If it still does not answer: Settings > General > Network > Expert Settings,\n"
+             "         Power On with Mobile on.")
+        line(os.path.exists(tv.token_file), "The TV has allowed this computer's remote", pair + "  (press Allow on the TV)")
+    elif tv_ip:
+        tv = tvbrands.LGTV(tv_ip)
+        paired = os.path.exists(tv.key_file)
+        line(paired, "The TV has accepted this computer's remote", pair + "  (accept it on the TV)")
+        if paired:
+            line(tv.is_on() is not None, "The LG TV at %s answers on the Wi-Fi" % tv_ip,
+                 "Switch the TV on, and check LG Connect Apps is on in its network settings.")
+    return True
 
 
 # ---------------------------------------------------------------- the questions
@@ -229,7 +265,7 @@ def agent_level(old):
 def main():
     if "--check" in sys.argv:
         st = jread(os.path.join(DATA, "settings.json"), {}) or {}
-        sys.exit(0 if checks(st.get("tv")) else 1)
+        sys.exit(0 if checks(st.get("tv"), st.get("tv_kind") or "android") else 1)
     st = jread(os.path.join(DATA, "settings.json"), {}) or {}
     pv = jread(os.path.join(DATA, "private.json"), {}) or {}
     say("guest-tv setup\n==============")
@@ -255,6 +291,12 @@ def main():
         cal = ask("Calendar link", home.get("calendar_url", ""))
         if cal:
             home["calendar_url"] = cal
+    brands = ["android", "samsung", "lg"]
+    st["tv_kind"] = brands[pick("What kind of TV?", [
+        ("Google TV or Android TV", "TCL, Hisense, Sony, Philips, Kogan, Chromecast with Google TV. guest-tv can be its home screen."),
+        ("Samsung", "2016 or later. guest-tv is an app this computer opens each time the TV comes on."),
+        ("LG", "webOS. The same as Samsung, through LG's Developer Mode. Not yet tried on a real LG.")],
+        brands.index(st.get("tv_kind") or "android") + 1)]
     st["tv"] = ask("The TV's IP address (TV Settings > Network > About)", st.get("tv", ""))
     st.setdefault("default_home", hid)
 
@@ -294,8 +336,17 @@ def main():
     jwrite(os.path.join(DATA, "settings.json"), st)
     jwrite(os.path.join(DATA, "private.json"), pv)
     say("\nSaved data/settings.json and data/private.json.")
-    checks(st.get("tv"))
+    checks(st.get("tv"), st["tv_kind"])
     tv = st.get("tv") or "<tv address>"
+    if st["tv_kind"] in ("samsung", "lg"):
+        k = "TV_KIND=%s TV_IP=%s" % (st["tv_kind"], tv)
+        say("\nNext (README, 'Samsung and LG'):\n  1. Start it: .venv/bin/python server.py  (keep it running: service/)\n"
+            "  2. Put it on the TV: %s .venv/bin/python tools/tv_app.py install\n"
+            "                       %s .venv/bin/python tools/tv_app.py pair   (press Allow on the TV)\n"
+            "                       %s .venv/bin/python tools/tv_app.py open\n"
+            "  3. Switch the TV off and on: guest-tv opens by itself in a few seconds.\n"
+            "  4. Scan the Guest remote code on the TV with your phone and try the Ask box." % (k, k, k))
+        return
     say("\nNext (README, Setup steps 4 to 6):\n  1. Start it: .venv/bin/python server.py  (keep it running: service/)\n"
         "  2. Put it on the TV: TV_IP=%s .venv/bin/python tools/tv_app.py install couch-tv-home.apk\n"
         "                       TV_IP=%s .venv/bin/python tools/tv_app.py home --home %s\n"

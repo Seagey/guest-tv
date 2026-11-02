@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- guest-tv for Samsung TVs (Tizen). tools/tv_app.py build samsung packs this folder and boot.html
+     as build/GuestTV.wgt. Samsung lets no app replace its home screen, so the computer opens this
+     app each time the TV comes on (README, "Samsung and LG"). -->
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
+        id="https://github.com/Seagey/guest-tv/samsung" version="1.0.0" viewmodes="maximized">
+  <tizen:application id="GuestTVApp.Home" package="GuestTVApp" required_version="2.3"/>
+  <content src="boot.html"/>
+  <name>Guest TV</name>
+  <icon src="icon.png"/>
+  <access origin="*" subdomains="true"/>
+  <tizen:allow-navigation>*</tizen:allow-navigation>
+  <tizen:privilege name="http://tizen.org/privilege/internet"/>
+  <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+  <tizen:profile name="tv-samsung"/>
+  <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable"
+                 encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

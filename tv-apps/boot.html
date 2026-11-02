@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Guest TV</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #14161d; color: #f7f6f3;
+    font: 400 34px/1.4 "Helvetica Neue", Arial, sans-serif; }
+  iframe { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; visibility: hidden; }
+  #wait { position: absolute; left: 0; right: 0; top: 42%; text-align: center; }
+  #wait small { display: block; margin-top: 14px; font-size: 24px; opacity: 0.6; }
+</style>
+</head>
+<body>
+<div id="wait">Welcome<small>Waiting for the house computer</small></div>
+<iframe id="page" allow="autoplay"></iframe>
+<script src="settings.js"></script>
+<script>
+// The Samsung and LG app. It shows the guest-tv TV page from the computer (settings.js says where),
+// full screen in a frame, and waits with a plain message while the computer does not answer.
+// The page opens apps through the computer, because these TVs let no web page open another app.
+(function () {
+  "use strict";
+  var S = window.GUEST_TV || {};
+  var BASE = (S.url || "").replace(/\/+$/, "");
+  var page = document.getElementById("page"), wait = document.getElementById("wait");
+  var up = false;
+
+  // Samsung: the media keys only reach an app that asks for them. Arrows, OK and Back always do.
+  try {
+    if (window.tizen && tizen.tvinputdevice) {
+      ["MediaPlayPause", "MediaPlay", "MediaPause"].forEach(function (k) { try { tizen.tvinputdevice.registerKey(k); } catch (e) {} });
+    }
+  } catch (e) {}
+
+  function ping(ok, bad) {
+    var x = new XMLHttpRequest();
+    x.open("GET", BASE + "/api/health");
+    x.timeout = 4000;
+    x.onload = function () { if (x.status === 200) ok(); else bad(); };
+    x.onerror = x.ontimeout = bad;
+    x.send();
+  }
+  function show() {
+    up = true;
+    page.onload = function () {
+      page.style.visibility = "visible";
+      wait.style.display = "none";
+      focusPage();
+    };
+    page.src = BASE + "/tv/?tv=" + encodeURIComponent(S.home || "") + "&brand=" + encodeURIComponent(S.brand || "");
+  }
+  function down() {
+    up = false;
+    page.onload = null;
+    page.style.visibility = "hidden";
+    page.src = "about:blank";
+    wait.style.display = "block";
+    setTimeout(start, 10000);
+  }
+  function start() { ping(show, function () { setTimeout(start, 10000); }); }
+  function focusPage() { try { page.contentWindow.focus(); } catch (e) {} }
+
+  // Keys land here only when the frame has lost focus: pass them on and give the focus back.
+  var NAMES = { 37: "left", 38: "up", 39: "right", 40: "down", 13: "ok", 10009: "back", 461: "back", 27: "back", 8: "back" };
+  document.addEventListener("keydown", function (e) {
+    var k = NAMES[e.keyCode];
+    if (!k || !up) return;
+    e.preventDefault();
+    try { page.contentWindow.postMessage({ guestKey: k }, "*"); } catch (err) {}
+    focusPage();
+  });
+
+  // The computer can go away later (a restart): check now and then, and wait again if it has.
+  setInterval(function () { if (up) ping(function () {}, down); }, 60000);
+  if (!BASE) wait.innerHTML = "Guest TV<small>Build this app with the computer's address (tools/tv_app.py build)</small>";
+  else start();
+})();
+</script>
+</body>
+</html>
