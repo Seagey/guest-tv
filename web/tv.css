@@ -248,3 +248,27 @@ body.mouse { cursor: default; }
 
 /* between stays: a calm screen, nothing private */
 .between .phone-chip { display: none; }
+
+/* ---------- older TV browsers ----------
+   html.old (set in tv.js): no CSS grid and no gap between flex items, seen in the Chrome 55 era
+   WebView a Fire OS 6 stick can carry. The same spacing, made with margins. */
+.old .cards, .old .two { display: flex; }
+.old .two > * { flex: 1 1 0%; }
+.old .cards > * + *, .old .two > * + * { margin-left: 1.5rem; }
+.old .phone-chip > * + * { margin-left: 1rem; }
+.old .phone-chip .step > * + *, .old .sheet-nav > * + * { margin-top: 0.5rem; }
+.old .card .k > svg { margin-right: 0.625rem; }
+.old .card .row > * + * { margin-left: 1rem; }
+.old .fc > * + *, .old .apps > * + * { margin-left: 1.25rem; }
+.old .fc.wide > * { margin: 0 2rem 0 0; }
+.old .app.pill > svg { margin-right: 0.75rem; }
+.old .app.pill > i { margin-left: 0.75rem; }
+.old .sheet-in > * + *, .old .wifi-big > * + * { margin-left: 3rem; }
+.old .zone-dots > * { margin: 0 0.5rem 0.5rem 0; }
+.old .zones > * { margin: 0 1.75rem 1.75rem 0; }
+/* a filter on clipped text paints it flat grey there, so the clock's glass fill goes unfiltered */
+.old .gclock .fill { filter: none; }
+/* no blur behind the glass: a darker tint keeps the words readable over the photo */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: rgba(18, 18, 24, 0.58); }
+}

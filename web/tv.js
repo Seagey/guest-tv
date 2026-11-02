@@ -7,6 +7,18 @@
   };
   window.addEventListener("unhandledrejection", function (e) { window.onerror("promise: " + (e.reason && (e.reason.stack || e.reason.message) || e.reason), "", 0, 0); });
   var $ = function (id) { return document.getElementById(id); };
+  // Older TV browsers (Fire OS 6 sticks can carry a Chrome 55 era WebView) have no CSS grid and no
+  // gap between flex items. html.old tells tv.css to space things with margins instead.
+  var OLD = (function () {
+    var d = document.createElement("div");
+    d.style.display = "flex"; d.style.flexDirection = "column"; d.style.rowGap = "1px";
+    d.appendChild(document.createElement("div")); d.appendChild(document.createElement("div"));
+    document.documentElement.appendChild(d);
+    var gap = d.scrollHeight === 1;
+    d.parentNode.removeChild(d);
+    return !gap || !(window.CSS && CSS.supports && CSS.supports("display", "grid"));
+  })();
+  if (OLD) document.documentElement.className += " old";
   var QS = {};
   location.search.replace(/^\?/, "").split("&").forEach(function (kv) {
     if (kv) { var p = kv.split("="); QS[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); }
@@ -248,6 +260,7 @@
       return '<div class="card glass' + (c.lead ? " lead" : "") + (c.photo ? " photo" : "") + '" data-i="' + i + '"' +
         (c.photo ? ' style="background-image:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.62)),url(homes/' + c.photo + '.jpg)"' : "") + ">" + c.html() + "</div>";
     }).join("");
+    if (OLD) for (var j = 0; j < CARDS.length; j++) box.children[j].style.flex = CARDS[j].w + " 1 0%";
     var q = box.querySelectorAll("[data-qr]");
     for (var k = 0; k < q.length; k++) loadSvg(q[k], q[k].getAttribute("data-qr"));
     if (idx >= CARDS.length) idx = 0;

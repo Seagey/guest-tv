@@ -52,7 +52,7 @@ TV buttons depend on the brand:
 | Your TV | Welcome screen | TV buttons, apps and shows from the phone | Guest profile picker |
 |---|---|---|---|
 | **Google TV or Android TV** (TCL, Hisense, Sony, Philips, Kogan, Chromecast with Google TV and others) | Yes, with the couch-tv TV app | Yes | Yes (Stan tested; Netflix by profile position) |
-| **Fire TV** | Not tried. The couch-tv TV app runs on Fire OS | Should work (it uses ADB), not tried | Not tried |
+| **Fire TV** (Fire OS 6, 7 and 8) | Yes, with the couch-tv TV app (Fire OS 6 needs a couch-tv release newer than 0.3). Amazon's home flashes up after Home, then guest-tv comes back. Checked on an emulator, not yet on a real Fire TV | Should work (it uses ADB), not tried on a real Fire TV | Not tried |
 | **Samsung** (Tizen, 2016 and later) | Yes, as an app the computer opens each time the TV comes on ([Samsung and LG](#samsung-and-lg)) | Yes. Netflix and YouTube open the show; other apps open on their home page | No. Samsung gives no way to read the screen |
 | **LG** (webOS) | Built the same way, through LG's Developer Mode. Not yet tried on a real LG | Built, not yet tried on a real LG | No |
 
