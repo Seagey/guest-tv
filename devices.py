@@ -1,4 +1,4 @@
-"""Smart lights and the host's own actions, for the Guest remote and the guest agent.
+"""Smart lights, the pool, speakers and the host's own actions, for the Guest remote and the guest agent.
 
 Lights, in data/settings.json (or a home's home.json, which wins):
 
@@ -103,6 +103,144 @@ def lights_set(cfg, private, ids, on=None, brightness=None):
             bad += 1
     if bad == len(ids):
         return {"ok": False, "error": "the lights didn't answer"}
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------- pool
+#
+#     "pool": {"kind": "home_assistant", "url": "http://homeassistant.local:8123",
+#              "temp": "sensor.pool_temperature", "heater": "switch.pool_heater"}   (or a climate.* heat pump)
+#     "pool": {"kind": "demo"}
+#
+# Guests see the water temperature. They may switch the heater only when "control": {"pool": "all"}.
+
+_pool_demo = {}       # home id -> {"temp", "heater", "setpoint", "at"}
+
+
+def pool_cfg(h, settings):
+    return h.get("pool") or settings.get("pool") or {}
+
+
+def _ha(cfg, private, method, path, body=None):
+    return _http(method, "%s/api/%s" % (cfg["url"].rstrip("/"), path), body,
+                 {"authorization": "Bearer " + private.get("ha_token", "")})
+
+
+def pool_state(cfg, private, key):
+    kind = cfg.get("kind")
+    if not kind:
+        return None
+    label = cfg.get("label") or "Pool"
+    try:
+        if kind == "home_assistant":
+            t = _ha(cfg, private, "GET", "states/" + cfg["temp"]) if cfg.get("temp") else {}
+            hv = _ha(cfg, private, "GET", "states/" + cfg["heater"]) if cfg.get("heater") else None
+            temp = (t or {}).get("state")
+            heater = sp = None
+            if hv:
+                at = hv.get("attributes") or {}
+                heater = hv.get("state") not in ("off", "unavailable", "unknown")
+                sp = at.get("temperature")
+                if temp in (None, "unknown", "unavailable"):
+                    temp = at.get("current_temperature")
+            temp = round(float(temp), 1) if temp not in (None, "unknown", "unavailable") else None
+            return {"ok": True, "label": label, "temp": temp, "heater": heater, "setpoint": sp, "has_heater": bool(cfg.get("heater"))}
+    except Exception:
+        return {"ok": False, "label": label, "temp": None, "heater": None, "setpoint": None, "has_heater": bool(cfg.get("heater"))}
+    with _lock:   # demo: the water warms toward 30° with the heater on, cools toward 24° with it off
+        s = _pool_demo.setdefault(key, {"temp": 26.4, "heater": False, "setpoint": 30, "at": time.time()})
+        mins = min(600, time.time() - s["at"]) / 60
+        goal = s["setpoint"] if s["heater"] else 24.0
+        s["temp"] = round(s["temp"] + (goal - s["temp"]) * min(1, 0.01 * mins), 1)
+        s["at"] = time.time()
+        return {"ok": True, "label": label, "temp": s["temp"], "heater": s["heater"], "setpoint": s["setpoint"], "has_heater": True, "demo": True}
+
+
+def pool_set(cfg, private, key, heater):
+    if not isinstance(heater, bool):
+        return {"ok": False, "error": "nothing to change"}
+    try:
+        if cfg.get("kind") == "home_assistant":
+            ent = cfg.get("heater") or ""
+            if ent.startswith("climate."):
+                _ha(cfg, private, "POST", "services/climate/set_hvac_mode", {"entity_id": ent, "hvac_mode": "heat" if heater else "off"})
+            elif ent:
+                _ha(cfg, private, "POST", "services/homeassistant/turn_" + ("on" if heater else "off"), {"entity_id": ent})
+            else:
+                return {"ok": False, "error": "this pool has no heater set up"}
+        else:
+            pool_state(cfg, private, key)
+            with _lock:
+                _pool_demo[key]["heater"] = heater
+    except Exception:
+        return {"ok": False, "error": "the pool heater didn't answer"}
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------- speakers
+#
+#     "speakers": {"kind": "home_assistant", "url": "http://homeassistant.local:8123",
+#                  "rooms": {"Living": "media_player.living", "Deck": "media_player.deck"}}
+#     "speakers": {"kind": "demo", "rooms": {"Living": "living", "Deck": "deck"}}
+#
+# Home Assistant covers Sonos, Google and Nest speakers, Bose, HEOS and most others. Guests can play,
+# pause, skip and set the volume, only in the rooms "control": {"speakers": ...} allows.
+
+_spk_demo = {}        # speaker id -> {"playing", "volume", "track"}
+DEMO_TRACKS = ["Saltwater Sunday", "Golden hour on the deck", "Easy morning", "Sunset session"]
+
+
+def speaker_cfg(h, settings):
+    return h.get("speakers") or settings.get("speakers") or {}
+
+
+def speaker_rooms(cfg):
+    return {str(k): str(v) for k, v in (cfg.get("rooms") or {}).items() if isinstance(v, (str, int))}
+
+
+def speaker_state(cfg, private, sid):
+    try:
+        if cfg.get("kind") == "home_assistant":
+            st = _ha(cfg, private, "GET", "states/" + sid)
+            at = st.get("attributes") or {}
+            v = at.get("volume_level")
+            title = " · ".join(x for x in (at.get("media_title"), at.get("media_artist")) if x)
+            return {"ok": True, "playing": st.get("state") == "playing", "volume": round(v * 100) if isinstance(v, (int, float)) else None, "title": title}
+    except Exception:
+        return {"ok": False, "playing": False, "volume": None, "title": ""}
+    with _lock:
+        s = _spk_demo.setdefault(sid, {"playing": False, "volume": 30, "track": 0})
+        return {"ok": True, "playing": s["playing"], "volume": s["volume"], "title": DEMO_TRACKS[s["track"] % len(DEMO_TRACKS)], "demo": True}
+
+
+def speaker_set(cfg, private, sid, action, volume=None):
+    """action: play, pause, next or volume (0 to 100)."""
+    if action not in ("play", "pause", "next", "volume"):
+        return {"ok": False, "error": "nothing to change"}
+    if action == "volume":
+        try:
+            volume = max(0, min(int(volume), 100))
+        except (TypeError, ValueError):
+            return {"ok": False, "error": "volume is 0 to 100"}
+    try:
+        if cfg.get("kind") == "home_assistant":
+            svc, body = {"play": ("media_play", {}), "pause": ("media_pause", {}), "next": ("media_next_track", {}),
+                         "volume": ("volume_set", {"volume_level": (volume or 0) / 100})}[action]
+            _ha(cfg, private, "POST", "services/media_player/" + svc, dict(body, entity_id=sid))
+        else:
+            with _lock:
+                s = _spk_demo.setdefault(sid, {"playing": False, "volume": 30, "track": 0})
+                if action == "play":
+                    s["playing"] = True
+                elif action == "pause":
+                    s["playing"] = False
+                elif action == "next":
+                    s["track"] += 1
+                    s["playing"] = True
+                else:
+                    s["volume"] = volume
+    except Exception:
+        return {"ok": False, "error": "the speaker didn't answer"}
     return {"ok": True}
 
 

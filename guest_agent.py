@@ -68,6 +68,8 @@ MENU = {
     "music": '    {"do": "music", "query": "what to search on Spotify"},',
     "aircon": '    {"do": "aircon", "room": "a room name from the list", "on": true or false or null, "setpoint": a whole number or null},',
     "lights": '    {"do": "lights", "room": "a room name from the list", "on": true or false or null, "brightness": 1 to 100 or null},',
+    "pool": '    {"do": "pool", "heater": true or false},',
+    "speaker": '    {"do": "speaker", "room": "a speaker room from the list", "action": "play" or "pause" or "next" or "volume", "volume": 0 to 100 or null},',
     "place": '    {"do": "place", "name": "exact name of a bookable place"},   (shows a Book a table button for it)',
     "action": '    {"do": "action", "id": "a host action id", "params": {...}},',
     "book": '    {"do": "book", "place": "exact name of a bookable place", "people": 1 to 20, "when": "day and time, e.g. Sat 7pm", "name": "guest name or null", "phone": "or null", "email": "or null"},',
@@ -90,6 +92,14 @@ def prompt_parts(ctx):
         what = " and ".join(x for x, y in (("air conditioning", has_ac), ("lights", has_lights)) if y)
         ab.append("- The %s in the rooms listed below, and nothing else in the house." % what)
         menu += (["aircon"] if has_ac else []) + (["lights"] if has_lights else [])
+    pool, spk = ctx.get("pool"), ctx.get("speakers") or []
+    if pool and pool.get("ok"):
+        ab.append("- The pool: tell them the water temperature" + (", and switch the pool heater on or off." if pool.get("can_heat") else ". You cannot change anything about the pool."))
+        if pool.get("can_heat"):
+            menu.append("pool")
+    if spk:
+        ab.append("- The speakers listed below: play, pause, skip and volume. Not what plays on them (that is the guest's own phone or app).")
+        menu.append("speaker")
     ab.append("- Questions about the weather and the local area.")
     if ctx.get("places"):
         ab.append("- Places to eat: when you recommend a bookable place, add a place action so the guest gets its Book a table button.")
@@ -119,6 +129,11 @@ def prompt_parts(ctx):
         room_txt = ("Rooms you may change (and only these):\n" + "\n".join(lines) +
                     "\nIf they name a room not listed, change nothing for it. \"Every room\" means only these.")
     extra = []
+    if pool and pool.get("ok"):
+        extra.append("Pool water now %s°%s." % (pool.get("temp"), (", heater " + ("on" if pool.get("heater") else "off")) if pool.get("has_heater") else ""))
+    if spk:
+        extra.append("Speakers you may use (and only these): " + "; ".join("%s (%s, volume %s%%%s)" % (
+            x["id"], "playing" if x.get("playing") else "paused", x.get("volume"), (", " + x["title"]) if x.get("title") else "") for x in spk))
     if ctx.get("places"):
         extra.append("Bookable places: " + "; ".join("%s (%s)" % (p["name"], p["category"]) for p in ctx["places"]))
     if "action" in menu:
@@ -256,6 +271,19 @@ def check(reply, ctx):
                 br = None
             if on is not None or br is not None:
                 keep.append({"do": "lights", "room": r["id"], "on": on, "brightness": br})
+        elif do == "pool" and isinstance(a.get("heater"), bool) and (ctx.get("pool") or {}).get("can_heat"):
+            keep.append({"do": "pool", "heater": a["heater"]})
+        elif do == "speaker" and a.get("action") in ("play", "pause", "next", "volume"):
+            spk = ctx.get("speakers") or []
+            n = str(a.get("room") or "").lower().strip()
+            r = next((x for x in spk if x["id"].lower() == n), None) or (spk[0] if not n and len(spk) == 1 else None)
+            vol = a.get("volume")
+            try:
+                vol = max(0, min(int(vol), 100)) if vol is not None else None
+            except (TypeError, ValueError):
+                vol = None
+            if r and (a["action"] != "volume" or vol is not None):
+                keep.append({"do": "speaker", "room": r["id"], "action": a["action"], "volume": vol})
         elif do == "place":
             p = _place(ctx, a.get("name"))
             if p:
@@ -326,6 +354,13 @@ def run(actions, ctx, code=""):
             elif a["do"] == "lights":
                 r = ctx["lights_set"](a["room"], a["on"], a["brightness"])
                 done.append("%s lights: " % a["room"] + ("done" if r.get("ok") else r.get("error", "could not change them")))
+            elif a["do"] == "pool":
+                r = ctx["pool_set"](a["heater"])
+                done.append("Pool heater " + ("on" if a["heater"] else "off") + ("" if r.get("ok") else ": " + r.get("error", "could not change it")))
+            elif a["do"] == "speaker":
+                r = ctx["speaker_set"](a["room"], a["action"], a["volume"])
+                what = {"play": "playing", "pause": "paused", "next": "next track", "volume": "volume %s%%" % a["volume"]}[a["action"]]
+                done.append("%s speaker: " % a["room"] + (what if r.get("ok") else r.get("error", "could not change it")))
             elif a["do"] == "place":
                 p = _place(ctx, a["name"])
                 links.append({"label": "Book a table at " + p["name"], "url": p["book"]})

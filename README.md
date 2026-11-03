@@ -28,7 +28,8 @@ Shown with demo homes and demo guests around Byron Bay. They come with the code:
 ## The Guest remote
 
 The TV shows two codes: **1 · Join the Wi-Fi**, then **2 · Guest remote**. The remote opens in the
-guest's phone browser, with nothing to install, and only works on your Wi-Fi.
+guest's phone browser, with nothing to install, and only works on your Wi-Fi. During a stay it
+also shows the dates, the Wi-Fi, the door codes, the house rules and the check-out steps.
 
 | The remote | Their room | House info |
 |---|---|---|
@@ -39,7 +40,7 @@ guest's phone browser, with nothing to install, and only works on your Wi-Fi.
 - The **Ask** box: "put on that show about the lawyer who never went to uni", "chill music", "make
   my room cooler", "dim the lights", "will it rain tomorrow?", "where's good for dinner?"
 - A D-pad, Back, Home, play and volume, the TV's streaming apps, and a card for each room they may
-  control (aircon, lights).
+  control (aircon, lights), the pool and the speakers.
 - Dinner answers come with a **Book a table** button for each place (its own booking page). At the
   Open level the agent can fill in the booking for them, after they check and tap **Book it**.
 
@@ -239,6 +240,8 @@ That removes the guest-tv app. Add `"tv_hook": false` to `data/settings.json` (o
 |---|---|---|
 | Aircon | AirTouch 5 on your Wi-Fi | `settings.json` `"aircon"` |
 | Lights | Home Assistant (covers Hue, LIFX, TP-Link, Govee, Nanoleaf and most others) or Philips Hue direct | home `"lights"` |
+| Pool | Home Assistant: a temperature sensor, and a heater switch or heat pump | home `"pool"` |
+| Speakers | Home Assistant (covers Sonos, Google and Nest, Bose, HEOS and most others) | home `"speakers"` |
 | Anything else | your own buttons, agent level Plus (below) | `data/actions.json` |
 
 Which rooms, per device, in the home as `"control"`:
@@ -258,6 +261,41 @@ whole place), a list such as `["Living", "Deck"]`, or `"none"`. Lights look like
 The Home Assistant token (`ha_token`) or Hue key (`hue_user`) goes in `data/private.json`. A room with
 lights gets a Lights card on the remote (on, off, brightness), and the agent can dim or switch them.
 Rooms with no smart lights show nothing.
+
+### Smart home: pool and speakers
+
+With a pool or speakers set up, the TV's Climate tile becomes a **Smart home** tile (inside
+temperature, pool water, what is playing), and OK on it opens one screen for the aircon, pool,
+speakers and lights, all driven with the TV's own remote.
+
+```json
+"pool": { "kind": "home_assistant", "url": "http://homeassistant.local:8123",
+          "temp": "sensor.pool_temperature", "heater": "switch.pool_heater" },
+"speakers": { "kind": "home_assistant", "url": "http://homeassistant.local:8123",
+              "rooms": { "Living": "media_player.living", "Deck": "media_player.deck" } },
+"control": { "aircon": "all", "lights": "all", "speakers": "all", "pool": "all" }
+```
+
+- **Pool:** guests always see the water temperature. They can switch the heater only with
+  `"pool": "all"` in `"control"`. A `climate.*` heat pump works as the heater too.
+- **Speakers:** play, pause, next and volume, in the rooms `"control"` allows. What plays is up to
+  the guest (AirPlay or Spotify Connect from their phone).
+- The agent can do the same: "heat the pool", "music on the deck", "turn it down a bit".
+- Headland House (`/tv/?home=headland`) shows all of it with pretend devices (`"kind": "demo"`).
+
+## Your own photo
+
+The demo homes come with their own photos. To show your place instead:
+
+```
+.venv/bin/python tools/home_photo.py <home-id> my-house.jpg            # the main photo
+.venv/bin/python tools/home_photo.py <home-id> lounge.jpg --inside     # beside the house guide
+.venv/bin/python tools/home_photo.py <home-id> beach.jpg --area        # on "Around here"
+```
+
+A wide (landscape) photo looks best. It is cut to 16:9 and gets a frosted copy for the glass clock.
+The clock sits on top of your photo (the demo homes also have a cut-out that tucks it behind the
+scenery).
 
 ## Agent levels: how much the agent may do
 

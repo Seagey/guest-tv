@@ -20,6 +20,22 @@
     {
       "title": "Surfboards",
       "body": "Feel free to borrow the boards. Rinse them with fresh water after each surf and put them back where you found them."
+    },
+    {
+      "title": "Pool hours",
+      "body": "The pool is open from 7am to 9pm. Please keep the gate shut at all times."
+    },
+    {
+      "title": "Parking",
+      "body": "Two cars fit in the garage and one on the drive. Please don't park on the grass or across the neighbour's driveway."
+    },
+    {
+      "title": "Pets",
+      "body": "Sorry, no pets inside the house. Assistance animals are always welcome."
+    },
+    {
+      "title": "Music",
+      "body": "Speakers on the deck go off at 10pm. Inside speakers are fine at a low volume."
     }
   ],
   "howto": [
@@ -38,6 +54,22 @@
     {
       "title": "Rubbish and recycling",
       "body": "Put rubbish and recycling in the right bins. Ask the host if you are unsure about bin night."
+    },
+    {
+      "title": "Speakers",
+      "body": "There are speakers in the living room, on the deck and in the main bedroom. Play, pause and change the volume from the TV or the Guest remote. To play your own music, connect your phone to the speaker with AirPlay or Spotify Connect."
+    },
+    {
+      "title": "Pool heater",
+      "body": "Turn the heater on from the Smart home tile on the TV. The water warms about one degree every two hours."
+    },
+    {
+      "title": "Barbecue",
+      "body": "The gas barbecue is on the deck. Turn the bottle on at the valve, then light it with the button. Please give the grill a scrape when you are done."
+    },
+    {
+      "title": "Bins",
+      "body": "Red lid is general rubbish, yellow lid is recycling, green lid is garden and food scraps. Bins go out on Sunday night."
     }
   ],
   "local": [
@@ -167,6 +199,10 @@
     {
       "name": "Emergency (police, fire, ambulance)",
       "phone": "000"
+    },
+    {
+      "name": "Your host Mia (message in the Airbnb app)",
+      "phone": "Airbnb app"
     }
   ]
 }

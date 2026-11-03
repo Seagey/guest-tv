@@ -86,6 +86,31 @@ button:disabled { opacity: 0.5; }
 .confirm .row { margin-top: 12px; }
 .confirm .fine { margin-top: 10px; font-size: 13px; color: var(--text-3); }
 a.info { display: block; text-align: center; color: #111; background: #fff; border-radius: 999px; padding: 13px; font-weight: 650; text-decoration: none; margin-top: 12px; }
+/* your stay */
+.kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 0; box-shadow: inset 0 -1px 0 var(--rim); }
+.kv:last-child { box-shadow: none; }
+.kv span { color: var(--text-2); font-size: 15px; }
+.kv b { font-size: 18px; font-weight: 650; letter-spacing: 0.02em; text-align: right; }
+.kv b.code { font-variant-numeric: tabular-nums; letter-spacing: 0.12em; }
+.nights { margin-top: 6px; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+details { margin-top: 12px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 0 0 1px var(--rim); }
+summary { list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 650; display: flex; justify-content: space-between; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--text-2); font-weight: 400; }
+details[open] summary::after { content: "−"; }
+details .in { padding: 0 16px 14px; }
+details .rule + .rule { margin-top: 10px; }
+details .rule b { display: block; font-size: 15px; }
+details .rule p, details li { font-size: 15px; color: var(--text-2); }
+details ol { padding-left: 20px; }
+details li + li { margin-top: 4px; }
+/* pool and speakers */
+.big { font-size: 40px; line-height: 1.1; font-weight: 300; letter-spacing: -0.02em; }
+.spk + .spk { margin-top: 14px; padding-top: 14px; box-shadow: inset 0 1px 0 var(--rim); }
+.spk .title { font-size: 14px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60vw; }
+.spk .ctl { display: flex; gap: 8px; }
+.spk .ctl button { width: 44px; padding: 0; }
+.vol { width: 100%; margin-top: 10px; accent-color: #fff; }
 .note { margin-top: 18px; font-size: 13px; color: var(--text-3); text-align: center; }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: rgba(40, 40, 46, 0.95); padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity 200ms; pointer-events: none; }
 .toast.show { opacity: 1; }
@@ -122,6 +147,8 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
     if (apps.indexOf("spotify") >= 0) c.push("Put on some chill music");
     if (rooms.some(function (r) { return r.aircon; })) c.push("Make my room cooler");
     if (rooms.some(function (r) { return r.lights; })) c.push("Dim the lights");
+    if (R.pool && R.pool.can_heat) c.push("Heat the pool");
+    if ((R.speakers || []).length) c.push("Music on the deck");
     c.push("Will it rain tomorrow?");
     c.push((R.places || []).length ? "Where's good for dinner?" : "Where's good for breakfast?");
     return c;
@@ -137,6 +164,7 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
       '<div class="chips">' + chips().map(function (c) {
         return '<button class="ghost" data-q="' + esc(c) + '">' + esc(c) + "</button>"; }).join("") + "</div>" +
       '<div class="reply" id="reply"></div><div class="done" id="done"></div><div class="links" id="links"></div><div id="cards"></div></section>';
+    if (stay && R.stay) h += stayCard(R.stay);
     h += '<section class="card"><div class="k">TV</div>' + (R.tv_on ? "" : '<p class="muted" style="margin-top:8px">The TV looks off. Turn it on with its own remote first.</p>') +
       '<div class="pad"><button class="u" data-k="up" aria-label="Up">▲</button><button class="l" data-k="left" aria-label="Left">◀</button><button class="ok" data-k="ok">OK</button><button class="r" data-k="right" aria-label="Right">▶</button><button class="d" data-k="down" aria-label="Down">▼</button></div>' +
       '<div class="keys"><button class="ghost" data-k="back">Back</button><button class="ghost" data-k="home">Home</button><button class="ghost" data-k="play_pause">Play/Pause</button>' +
@@ -144,6 +172,8 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
     if (R.apps.length) h += '<section class="card"><div class="k">Apps</div><div class="apps">' + R.apps.map(function (a) {
       return '<button class="ghost" data-app="' + esc(a.id) + '">' + esc(a.name) + "</button>"; }).join("") + "</div></section>";
     (R.rooms || []).forEach(function (r, i) { h += roomCard(r, i); });
+    if (R.pool) h += poolCard(R.pool);
+    if ((R.speakers || []).length) h += speakersCard(R.speakers);
     h += '<a class="info" href="/p/?home=' + encodeURIComponent(HOME) + '">Wi-Fi, house info and local picks</a>' +
       '<p class="note">This remote only works on this home\'s Wi-Fi' + (stay ? ", and only during your stay" : "") + ".</p>";
     var main = $("main");
@@ -152,6 +182,35 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
     $("ask").onsubmit = function (e) { e.preventDefault(); ask($("q").value); };
   }
 
+  function d8(iso) { var p = String(iso).slice(0, 10).split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dayShort(iso) { var d = d8(iso); return DAYS[d.getDay()].slice(0, 3) + " " + d.getDate() + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()]; }
+  function hm12(hhmm) { var p = String(hhmm || "10:00").split(":"), h = +p[0]; return (h % 12 || 12) + (p[1] && p[1] !== "00" ? ":" + p[1] : "") + (h < 12 ? "am" : "pm"); }
+  function stayCard(s) {
+    var h = '<section class="card"><div class="k">Your stay</div>';
+    if (s.from) h += '<div class="nights">' + (s.night ? "Night " + s.night + " of " + s.nights : s.nights + " nights") + "</div>" +
+      '<div class="kv"><span>Check-in</span><b>' + dayShort(s.from) + ", " + hm12(s.checkin) + "</b></div>" +
+      '<div class="kv"><span>Check-out</span><b>' + dayShort(s.to) + ", " + hm12(s.checkout) + "</b></div>";
+    if (s.wifi && s.wifi.ssid) h += '<div class="kv"><span>Wi-Fi</span><b>' + esc(s.wifi.ssid) + '</b></div><div class="kv"><span>Password</span><b>' + esc(s.wifi.password) + "</b></div>";
+    (s.access || []).forEach(function (a) { h += '<div class="kv"><span>' + esc(a.label) + '</span><b class="code">' + esc(a.code) + "</b></div>"; });
+    if ((s.rules || []).length) h += "<details><summary>House rules</summary><div class=\"in\">" + s.rules.map(function (r) {
+      return '<div class="rule"><b>' + esc(r.title) + "</b><p>" + esc(r.body) + "</p></div>"; }).join("") + "</div></details>";
+    if ((s.checkout_steps || []).length) h += "<details><summary>Before you leave</summary><div class=\"in\"><ol>" + s.checkout_steps.map(function (x) {
+      return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></div></details>";
+    return h + "</section>";
+  }
+  function poolCard(p) {
+    return '<section class="card" id="pool"><div class="k">' + esc(p.label || "Pool") + '</div><div class="row" style="margin-top:10px"><div><div class="big">' +
+      (p.temp != null ? p.temp + "°" : "−") + '</div><div class="now muted">Water now' + (p.can_heat ? ", heater <span class=\"pl-name\">" + (p.heater ? "on" : "off") + "</span>" : "") + "</div></div>" +
+      (p.can_heat ? '<button class="toggle pl-on' + (p.heater ? " on" : "") + '" data-pool="1" aria-label="Pool heater on or off"></button>' : "") + "</div></section>";
+  }
+  function speakersCard(list) {
+    return '<section class="card"><div class="k">Speakers</div>' + list.map(function (x, i) {
+      return '<div class="spk" data-spk="' + i + '" style="margin-top:12px"><div class="row"><div><div class="name" style="font-size:18px;font-weight:650">' + esc(x.label) + '</div><div class="title">' +
+        esc(x.playing ? x.title || "Playing" : "Paused") + '</div></div><div class="ctl"><button class="ghost" data-sa="' + (x.playing ? "pause" : "play") + '" data-s="' + i + '" aria-label="Play or pause">' + (x.playing ? "❚❚" : "▶") + '</button>' +
+        '<button class="ghost" data-sa="next" data-s="' + i + '" aria-label="Next">⏭</button></div></div>' +
+        '<input class="vol" type="range" min="0" max="100" step="5" value="' + (x.volume || 0) + '" data-sv="' + i + '" aria-label="Volume"></div>';
+    }).join("") + "</section>";
+  }
   function roomCard(r, i) {
     var h = '<section class="card zone" data-room="' + i + '"><div class="k">' + esc(r.label) + "</div>", a = r.aircon, l = r.lights;
     if (a) h += '<div class="row" style="margin-top:10px"><div><div class="name">Aircon <span class="ac-name">' + (a.on ? "on" : "off") + '</span></div><div class="now">It\'s ' + esc(a.temp) + '° in there</div></div>' +
@@ -216,6 +275,8 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
     if (b.dataset.k) return api("/api/r/key", { key: b.dataset.k }).then(function (r) { if (r._status === 403) ended(r.error); else if (r.ok === false) toast(r.error); });
     if (b.dataset.app) return api("/api/r/app", { app: b.dataset.app }).then(function (r) { toast(r.ok ? "Opening" : (r.error || "Couldn't open it")); });
     if (b.dataset.ok) return doConfirm(b.dataset.ok);
+    if (b.dataset.pool) return api("/api/r/pool", { heater: !R.pool.heater }).then(function (r) { if (r.ok === false) toast(r.error); else toast("Pool heater " + (R.pool.heater ? "off" : "on")); refresh(); });
+    if (b.dataset.sa) { var sp = R.speakers[b.dataset.s]; return api("/api/r/speaker", { room: sp.id, action: b.dataset.sa }).then(function (r) { if (r.ok === false) toast(r.error); refresh(); }); }
     if (b.dataset.cancel) { $("cards").innerHTML = ""; return; }
     if (b.dataset.ac) { var ra = R.rooms[b.dataset.ac]; return api("/api/r/aircon", { room: ra.id, on: !ra.aircon.on }).then(function (r) { if (r.ok === false) toast(r.error); refresh(); }); }
     if (b.dataset.li) { var rl = R.rooms[b.dataset.li]; return api("/api/r/lights", { room: rl.id, on: !rl.lights.on }).then(function (r) { if (r.ok === false) toast(r.error); refresh(); }); }
@@ -228,7 +289,12 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
   });
 
   document.addEventListener("change", function (e) {
-    var el = e.target; if (!el.dataset || el.dataset.br == null) return;
+    var el = e.target;
+    if (el.dataset && el.dataset.sv != null) {
+      var sp = R.speakers[el.dataset.sv];
+      return api("/api/r/speaker", { room: sp.id, action: "volume", volume: Number(el.value) }).then(function (x) { if (x.ok === false) toast(x.error); });
+    }
+    if (!el.dataset || el.dataset.br == null) return;
     var r = R.rooms[el.dataset.br];
     api("/api/r/lights", { room: r.id, brightness: Number(el.value) }).then(function (x) { if (x.ok === false) toast(x.error); refresh(); });
   });
@@ -238,6 +304,13 @@ a.info { display: block; text-align: center; color: #111; background: #fff; bord
       if (r._status === 403) return ended(r.error);
       var first = !R; R = r;
       if (first) return draw();
+      var pe = $("pool");
+      if (pe && R.pool) { pe.querySelector(".big").textContent = R.pool.temp != null ? R.pool.temp + "°" : "−"; var t = pe.querySelector(".pl-on"); if (t) { t.classList.toggle("on", !!R.pool.heater); pe.querySelector(".pl-name").textContent = R.pool.heater ? "on" : "off"; } }
+      (R.speakers || []).forEach(function (x, i) {
+        var el = document.querySelector('[data-spk="' + i + '"]'); if (!el) return;
+        el.querySelector(".title").textContent = x.playing ? x.title || "Playing" : "Paused";
+        var pb = el.querySelector("[data-sa=play],[data-sa=pause]"); pb.dataset.sa = x.playing ? "pause" : "play"; pb.textContent = x.playing ? "❚❚" : "▶";
+      });
       (R.rooms || []).forEach(function (r, i) {
         var el = document.querySelector('[data-room="' + i + '"]'); if (!el) return;
         if (r.aircon && el.querySelector(".ac-on")) { el.querySelector(".ac-on").classList.toggle("on", r.aircon.on); el.querySelector(".ac-name").textContent = r.aircon.on ? "on" : "off"; }

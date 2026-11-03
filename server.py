@@ -567,6 +567,60 @@ def lights_set(h, rid, on=None, brightness=None):
     return devices.lights_set(lcfg, private(), devices.light_rooms(lcfg)[r["id"]], on, brightness)
 
 
+def remote_speakers(h):
+    """The speakers this guest may play and pause, one per room, with what each is doing."""
+    import devices
+    cfg = devices.speaker_cfg(h, settings())
+    sr = devices.speaker_rooms(cfg)
+    mine = h.get("room") or next(iter(sr), None)
+    return [dict(devices.speaker_state(cfg, private(), sr[n]), id=n, label=n) for n in _pick(list(sr), control(h, "speakers"), mine)]
+
+
+def speaker_set(h, rid, action, volume=None):
+    import devices
+    cfg = devices.speaker_cfg(h, settings())
+    r = next((s for s in remote_speakers(h) if s["id"].lower() == str(rid or "").lower()), None)
+    if not r:
+        sp = remote_speakers(h)
+        r = sp[0] if rid is None and len(sp) == 1 else None
+    if not r:
+        return {"ok": False, "error": "no speaker you can use there"}
+    return devices.speaker_set(cfg, private(), devices.speaker_rooms(cfg)[r["id"]], action, volume)
+
+
+def pool_info(h):
+    """The pool's water temperature and heater, and whether a guest may switch the heater."""
+    import devices
+    st = devices.pool_state(devices.pool_cfg(h, settings()), private(), h["id"])
+    if st:
+        st["can_heat"] = bool(st.get("has_heater")) and control(h, "pool") == "all"
+    return st
+
+
+def pool_set(h, heater):
+    import devices
+    p = pool_info(h)
+    if not p or not p.get("can_heat"):
+        return {"ok": False, "error": "the pool heater is not yours to change"}
+    return devices.pool_set(devices.pool_cfg(h, settings()), private(), h["id"], heater)
+
+
+def hub(h):
+    """The smart home at a glance: aircon rooms, lights, pool and speakers the guest may use."""
+    return {"rooms": remote_rooms(h), "pool": pool_info(h), "speakers": remote_speakers(h)}
+
+
+def stay_info(h):
+    """The stay on the Guest remote (only ever sent with this stay's remote code)."""
+    s, g = stay_of(h), h.get("guide", {})
+    if h.get("mode") == "guest":
+        return {"wifi": h.get("wifi")}
+    return {"from": s.get("from"), "to": s.get("to"), "night": s.get("night"), "nights": s.get("nights"),
+            "checkin": h.get("checkin"), "checkout": h.get("checkout"), "host": h.get("host"),
+            "wifi": h.get("wifi"), "access": h.get("access", []), "rules": g.get("rules", []),
+            "checkout_steps": (g.get("checkout") or {}).get("steps", []), "emergency": g.get("emergency", [])}
+
+
 def agent_cfg():
     """How much the guest agent may do: "locked" (default), "plus" (the host's own actions) or "open"
     (also web search and the MCP servers the host lists, including agentic booking). README, "Agent levels"."""
@@ -610,6 +664,8 @@ def remote_ctx(h):
     acts = devices.load_actions(os.path.join(DATA, ag.get("actions_file", "actions.json"))) if ag["level"] != "locked" else []
     book = ag.get("booking") or {}
     return {"tv": tv, "tv_on": bool(apps), "apps": apps, "rooms": remote_rooms(h), "weather": weather(),
+            "pool": pool_info(h), "speakers": remote_speakers(h),
+            "pool_set": lambda on: pool_set(h, on), "speaker_set": lambda rid, act, vol: speaker_set(h, rid, act, vol),
             "local": g.get("local", []), "howto": g.get("howto", []), "notes": h.get("notes", []), "stay": stay,
             "place": "%s (%s)" % (h.get("name"), h.get("kind") or "a home"), "today": now().strftime("%A %-d %B %Y"),
             "places": places(h), "level": ag["level"], "actions": acts, "open": ag.get("open") or {},
@@ -701,7 +757,11 @@ class H(BaseHTTPRequestHandler):
                 "ok": True, "home": h["id"], "mode": h.get("mode", "stay"), "place": h.get("name"),
                 "guest": s.get("guest", ""), "until": s.get("checkout") if h.get("mode") != "guest" else None,
                 "tv_on": ctx["tv_on"], "apps": [{"id": a["id"], "name": a["name"]} for a in ctx["apps"]],
-                "rooms": ctx["rooms"], "places": ctx["places"], "level": ctx["level"], "ask_limit": 20})
+                "rooms": ctx["rooms"], "pool": ctx["pool"], "speakers": ctx["speakers"], "stay": stay_info(h),
+                "places": ctx["places"], "level": ctx["level"], "ask_limit": 20})
+        if path == "/api/hub":   # the TV page: the smart home tile and sheet
+            h = self.home(qs)
+            return self.send(200, hub(h) if h else {"error": "no such home"})
         if path == "/api/tv/apps":   # the TV page on a Samsung or LG: the app row (they open through here)
             h = self.home(qs)
             import tvctl
@@ -781,6 +841,10 @@ class H(BaseHTTPRequestHandler):
                 on = body.get("on") if isinstance(body.get("on"), bool) else None
                 b = body.get("brightness")
                 return self.send(200, lights_set(h, body.get("room"), on, int(b) if isinstance(b, (int, float)) else None))
+            if path == "/api/r/pool":
+                return self.send(200, pool_set(h, body.get("heater")))
+            if path == "/api/r/speaker":
+                return self.send(200, speaker_set(h, body.get("room"), body.get("action"), body.get("volume")))
             if path == "/api/r/ask":
                 return self.send(200, guest_agent.ask(body.get("text", ""), remote_ctx(h), qs.get("c", "")))
             if path == "/api/r/confirm":   # the guest tapped Confirm on a booking or a host action the agent offered
@@ -821,6 +885,14 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, {"ok": True})
         if path == "/api/aircon":
             return self.send(200, aircon_set(h, body))
+        if path == "/api/hub":   # the TV page: pool heater, speakers and lights, with the same limits as the remote
+            if "heater" in body:
+                return self.send(200, pool_set(h, body.get("heater")))
+            if body.get("speaker"):
+                return self.send(200, speaker_set(h, body["speaker"], body.get("action"), body.get("volume")))
+            if body.get("lights"):
+                return self.send(200, lights_set(h, body["lights"], body.get("on") if isinstance(body.get("on"), bool) else None))
+            return self.send(400, {"error": "nothing to change"})
         if path == "/api/log":   # the TV page reports its own script errors here (TVs have no console to look at)
             with open(os.path.join(HERE, "logs", "tv-errors.log"), "a") as f:
                 f.write("%s %s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), self.client_address[0], json.dumps(body)[:600]))

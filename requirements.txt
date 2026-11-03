@@ -3,4 +3,5 @@ adb-shell
 rsa
 airtouch5py
 websocket-client
+pillow
 # tools/brands_test.py also needs: websockets

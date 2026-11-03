@@ -24,7 +24,7 @@
     if (kv) { var p = kv.split("="); QS[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ""); }
   });
   var HOME = QS.home || QS.tv || "";   // the couch-tv TV app adds ?tv=<id>
-  var S = null, WX = null, AC = null, CARDS = [], APPS = [], PILLS = [];
+  var S = null, WX = null, AC = null, HUB = null, CARDS = [], APPS = [], PILLS = [];
   var area = "cards", idx = 0, appIdx = 0;
   var sheet = null;   // {id, nav: [...], navIdx, zoneIdx, inMain}
   var TVOS = window.TVOS || null;   // the couch-tv TV app gives the page apps() and launch()
@@ -52,6 +52,10 @@
     local: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>',
     checkout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/></svg>',
     weather: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="3.5"/><path d="M9 2.5v1.5M2.5 9H4M4.4 4.4l1 1M13.6 4.4l-1 1"/><path d="M8 20h9a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.4 1.6A2.7 2.7 0 0 0 8 20z"/></svg>',
+    hub: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><circle cx="17.25" cy="17.25" r="3.75"/></svg>',
+    pool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 16c1.6 0 1.6-1.2 3.2-1.2s1.6 1.2 3.2 1.2 1.6-1.2 3.1-1.2 1.6 1.2 3.2 1.2 1.6-1.2 3.2-1.2 1.6 1.2 3.1 1.2"/><path d="M2.5 20c1.6 0 1.6-1.2 3.2-1.2s1.6 1.2 3.2 1.2 1.6-1.2 3.1-1.2 1.6 1.2 3.2 1.2 1.6-1.2 3.2-1.2 1.6 1.2 3.1 1.2"/><path d="M8 13V5.5a2 2 0 0 1 4 0M16 13V5.5a2 2 0 0 0-4 0M8 8.5h8"/></svg>',
+    music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+    light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
     notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'
   };
   function wx(code, day) {
@@ -208,6 +212,17 @@
       return '<div class="k">' + I.climate + (S.mode === "guest" ? "Your room" : "Climate") + "</div>" +
         '<div><div class="big">' + c.big + '</div><div class="small">' + esc(c.small) + "</div></div>";
     } };
+    var hasHub = HUB && (HUB.pool || (HUB.speakers || []).length);
+    var hubCard = { id: "hub", w: 1.6, html: function () {
+      var c = climateSummary(), p = HUB.pool, sp = (HUB.speakers || []).filter(function (x) { return x.playing; })[0] || (HUB.speakers || [])[0];
+      var row = function (icon, name, val, note) {
+        return '<div class="hubrow">' + icon + "<i>" + esc(name) + "</i><b>" + esc(val) + "</b><span>" + esc(note) + "</span></div>";
+      };
+      return '<div class="k">' + I.hub + "Smart home</div><div>" +
+        row(I.climate, "Inside", c.big, AC && AC.power === "on" ? "On" : "Off") +
+        (p ? row(I.pool, "Pool", p.temp != null ? p.temp + "°" : "−", p.heater ? "Heating" : "Heater off") : "") +
+        (sp ? row(I.music, sp.label, sp.playing ? "Playing" : "Paused", sp.playing ? sp.title || "" : "") : "") + "</div>";
+    } };
     var guideCard = { id: "guide", w: 1, html: function () {
       return '<div class="k">' + I.guide + "House guide</div><div><div class=\"mid\">" + g + ' things</div><div class="small">Rules and how things work</div></div>';
     } };
@@ -241,11 +256,13 @@
       out = places ? [welcomeCard, weatherCard, localCard] : [welcomeCard, weatherCard];
     } else if (st.phase === "lastday") {
       checkoutCard.lead = true; checkoutCard.w = 1.3;
+      if (hasHub) { climateCard = hubCard; }
       out = [checkoutCard, stayCard, wifiCard, climateCard];
-      stayCard.w = 2; climateCard.w = 1.2;
+      stayCard.w = 2; climateCard.w = hasHub ? 1.6 : 1.2;
       if (places) pills.push(localPill);
     } else {
       stayCard.w = 2; wifiCard.w = 1.45; climateCard.w = 1.2;
+      if (hasHub) { climateCard = hubCard; climateCard.w = 1.75; stayCard.w = 1.9; wifiCard.w = 1.35; }
       out = places ? [stayCard, wifiCard, climateCard, localCard] : [stayCard, wifiCard, climateCard];
       pills.push({ id: "checkout", name: "Check-out", icon: I.checkout, note: DAYS[d8(st.to).getDay()].slice(0, 3) + " " + t12(S.checkout_time) });
     }
@@ -354,6 +371,14 @@
       if (S.howto.length) { out.push({ group: "How things work" }); S.howto.forEach(function (x) { out.push({ t: x.title, body: x.body }); }); }
       return out;
     }
+    if (id === "hub") {
+      var h = [];
+      if (AC && AC.connected && AC.zones.length) h.push({ t: "Air conditioning", k: "ac" });
+      if (HUB && HUB.pool) h.push({ t: "Pool", k: "pool" });
+      if (HUB && (HUB.speakers || []).length) h.push({ t: "Speakers", k: "spk" });
+      if (HUB && hubLights().length) h.push({ t: "Lights", k: "lights" });
+      return h;
+    }
     if (id === "local") {
       var l = S.local.map(function (c) { return { t: c.category, items: c.items || [] }; });
       if (S.emergency.length) l.push({ t: "Emergency", emergency: true });
@@ -369,7 +394,7 @@
     }
     return [];
   }
-  var TITLES = { stay: "Your stay", about: "Welcome", wifi: "Wi-Fi", climate: "Climate", guide: "House guide", local: "Around here", checkout: "Check-out", weather: "Weather" };
+  var TITLES = { hub: "Smart home", stay: "Your stay", about: "Welcome", wifi: "Wi-Fi", climate: "Climate", guide: "House guide", local: "Around here", checkout: "Check-out", weather: "Weather" };
   function openSheet(id) {
     if (id === "weather") id = S.mode === "guest" ? "weather" : "stay";
     var nav = navList(id);
@@ -377,6 +402,7 @@
     while (nav[first] && nav[first].group) first++;
     sheet = { id: id, nav: nav, navIdx: first, sel: first, zoneIdx: 0 };
     if (id === "climate") refreshAircon();
+    if (id === "hub") { sheet.inMain = false; sheet.item = 0; refreshHub(); }
     drawSheet();
     $("sheet").classList.add("on");
     paintFocus();
@@ -390,7 +416,7 @@
     var sh = sheet, navHtml = "<h2>" + esc(S.mode === "guest" && sh.id === "climate" ? "Your room" : S.mode === "guest" && sh.id === "guide" ? "How things work" : TITLES[sh.id] || "") + "</h2>";
     navHtml += sh.nav.map(function (n, i) {
       if (n.group) return '<div class="group">' + esc(n.group) + "</div>";
-      return '<div class="item' + (i === sh.sel ? " sel" : "") + (i === sh.navIdx && sh.id !== "climate" ? " focus" : "") + '" data-n="' + i + '">' + esc(n.t) + "</div>";
+      return '<div class="item' + (i === sh.sel ? " sel" : "") + (i === sh.navIdx && sh.id !== "climate" && !sh.inMain ? " focus" : "") + '" data-n="' + i + '">' + esc(n.t) + "</div>";
     }).join("");
     if (sh.id === "climate") navHtml += '<p class="climate-note">' + esc(climateNote()) + "</p>";
     if (sh.id === "wifi" || sh.id === "checkout") navHtml += '<p class="climate-note">' + (sh.id === "wifi" ? "Point your phone's camera at the code to join." : "Thanks for looking after the place.") + "</p>";
@@ -399,6 +425,7 @@
     $("sheet-main").classList.toggle("mid", sh.id === "climate" || sh.id === "wifi" || sh.id === "checkout");
     var q = $("sheet-main").querySelectorAll("[data-qr]");
     for (var k = 0; k < q.length; k++) loadSvg(q[k], q[k].getAttribute("data-qr"));
+    if (sh.id === "hub") { $("sheet-hint").innerHTML = hubHint(); return; }
     $("sheet-hint").innerHTML = sh.id === "climate"
       ? "<b>Up</b> and <b>down</b> change the temperature · <b>OK</b> turns a room on or off · <b>Back</b> to close"
       : sh.nav.length ? "<b>Up</b> and <b>down</b> to move · <b>Back</b> to close" : "<b>Back</b> to close";
@@ -425,6 +452,7 @@
         '<div><h3>On your phone too</h3><p>Once you are on the Wi-Fi, this code opens the house guide, climate and local tips on your phone. Nothing to install.</p></div></div>';
     }
     if (sh.id === "climate") return zonesHtml();
+    if (sh.id === "hub") return hubMain();
     if (sh.id === "checkout") {
       var steps = (S.checkout.steps || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
       return '<div class="panel glass"><p class="meta">' + (st.phase === "lastday" ? "Today" : st.to ? DAYS[d8(st.to).getDay()] : "") + '</p><h3>Check-out by ' + t12(S.checkout_time) + "</h3><ol>" + steps + "</ol></div>" +
@@ -460,11 +488,82 @@
     }
     return "";
   }
+  // ---------------------------------------------------------------- smart home sheet
+  function hubLights() { return ((HUB && HUB.rooms) || []).filter(function (r) { return r.lights; }); }
+  function hubItems(k) {
+    if (k === "ac") return (AC && AC.zones) || [];
+    if (k === "pool") return HUB && HUB.pool ? [HUB.pool] : [];
+    if (k === "spk") return (HUB && HUB.speakers) || [];
+    if (k === "lights") return hubLights();
+    return [];
+  }
+  function hubMain() {
+    var sh = sheet, n = sh.nav[sh.sel] || {}, f = function (i) { return sh.inMain && i === sh.item ? " focus" : ""; };
+    if (n.k === "ac") { var keep = sh.zoneIdx; sh.zoneIdx = sh.inMain ? sh.item : -1; var z = zonesHtml(); sh.zoneIdx = keep; return z; }
+    if (n.k === "pool") {
+      var p = HUB.pool;
+      return '<div class="zones"><div class="zone glass hubtile pool' + (p.heater ? " on heat" : " off") + f(0) + '"><div class="zn">' + esc(p.label || "Pool") + '</div>' +
+        '<div class="hubbig">' + (p.temp != null ? p.temp + "°" : "−") + '</div><div class="st">Water now' + (p.setpoint ? " · heats to " + p.setpoint + "°" : "") + "</div>" +
+        '<span class="pwr">' + (p.heater ? "Heater on" : "Heater off") + "</span></div>" +
+        '<div class="panel glass hubnote"><p>' + (p.can_heat ? "The heater takes a few hours to warm the water. Turn it off when you go out." : "Ask your host if you would like the pool heated.") + "</p></div></div>";
+    }
+    if (n.k === "spk") return '<div class="zones">' + HUB.speakers.map(function (x, i) {
+      return '<div class="zone glass hubtile' + (x.playing ? " on" : " off") + f(i) + '"><div class="zn">' + esc(x.label) + '</div>' + I.music +
+        '<div class="st one">' + esc(x.playing ? x.title || "Playing" : "Paused") + '</div><div class="vol"><i style="width:' + (x.volume || 0) + '%"></i></div>' +
+        '<span class="pwr">' + (x.playing ? "Playing · " : "Paused · ") + (x.volume != null ? x.volume + "%" : "") + "</span></div>";
+    }).join("") + "</div>";
+    if (n.k === "lights") return '<div class="zones">' + hubLights().map(function (r, i) {
+      var l = r.lights;
+      return '<div class="zone glass hubtile' + (l.on ? " on warm" : " off") + f(i) + '"><div class="zn">' + esc(r.label) + "</div>" + I.light +
+        '<div class="st">' + (l.on && l.brightness ? l.brightness + "% bright" : l.on ? "On" : "Off") + '</div><span class="pwr">' + (l.on ? "On" : "Off") + "</span></div>";
+    }).join("") + "</div>";
+    return "";
+  }
+  function hubHint() {
+    var sh = sheet, n = sh.nav[sh.sel] || {};
+    if (!sh.inMain) return "<b>Up</b> and <b>down</b> to move · <b>Right</b> or <b>OK</b> to use · <b>Back</b> to close";
+    var lr = hubItems(n.k).length > 1 ? "<b>Left</b> and <b>right</b> pick · " : "";
+    if (n.k === "ac") return lr + "<b>Up</b> and <b>down</b> change the temperature · <b>OK</b> turns it on or off · <b>Back</b>";
+    if (n.k === "pool") return HUB.pool.can_heat ? "<b>OK</b> turns the heater on or off · <b>Back</b>" : "<b>Back</b>";
+    if (n.k === "spk") return lr + "<b>OK</b> play or pause · <b>Up</b> and <b>down</b> volume · <b>Back</b>";
+    return lr + "<b>OK</b> turns them on or off · <b>Back</b>";
+  }
+  function hubKey(k) {
+    var sh = sheet, n = sh.nav[sh.sel] || {}, items = hubItems(n.k);
+    if (!sh.inMain) {
+      if (k === "up" || k === "down") { var i = sh.navIdx + (k === "up" ? -1 : 1); if (sh.nav[i]) { sh.navIdx = sh.sel = i; sh.item = 0; } }
+      else if ((k === "right" || k === "ok") && items.length) { sh.inMain = true; sh.item = 0; }
+      drawSheet(); return;
+    }
+    if (k === "left" && sh.item === 0) { sh.inMain = false; drawSheet(); return; }
+    if (k === "left" || k === "right") { sh.item = Math.max(0, Math.min(items.length - 1, sh.item + (k === "left" ? -1 : 1))); drawSheet(); return; }
+    var it = items[sh.item];
+    if (!it) return;
+    if (n.k === "ac") {
+      if ((k === "up" || k === "down") && it.can_set) { it.setpoint = Math.max(16, Math.min(30, (it.setpoint || 22) + (k === "up" ? 1 : -1))); queueSet(it, { setpoint: it.setpoint }); }
+      else if (k === "ok") { it.on = !it.on; if (it.on && AC.power === "off") AC.power = "on"; queueSet(it, { on: it.on }); toast((it.label || it.name) + (it.on ? " on" : " off")); }
+    } else if (n.k === "pool" && k === "ok" && it.can_heat) {
+      it.heater = !it.heater; hubSend({ heater: it.heater }); toast("Pool heater " + (it.heater ? "on" : "off"));
+    } else if (n.k === "spk") {
+      if (k === "ok") { it.playing = !it.playing; hubSend({ speaker: it.id, action: it.playing ? "play" : "pause" }); toast(it.label + (it.playing ? " playing" : " paused")); }
+      else if (k === "up" || k === "down") { it.volume = Math.max(0, Math.min(100, (it.volume || 0) + (k === "up" ? 10 : -10))); hubSend({ speaker: it.id, action: "volume", volume: it.volume }, true); }
+    } else if (n.k === "lights" && k === "ok") {
+      it.lights.on = !it.lights.on; hubSend({ lights: it.id, on: it.lights.on }); toast(it.label + " lights " + (it.lights.on ? "on" : "off"));
+    }
+    drawSheet();
+  }
+  var hubT = 0;
+  function hubSend(body, later) {
+    clearTimeout(hubT);
+    var go = function () { api("hub", body).then(function (r) { if (!r.ok) toast(r.error || "That did not work"); setTimeout(refreshHub, 800); }); };
+    if (later) hubT = setTimeout(go, 600); else go();
+  }
+
   var ARC = 2 * Math.PI * 42 * 0.75;
   function zonesHtml() {
     if (!AC || !AC.connected) return '<div class="panel glass"><p class="lede">' + (AC ? "The air conditioning is not answering right now." : "Checking the air conditioning.") + "</p></div>";
     var heat = AC.mode === "heat";
-    return '<div class="zones">' + AC.zones.map(function (z, i) {
+    return '<div class="zones' + (AC.zones.length > 3 ? " compact" : "") + '">' + AC.zones.map(function (z, i) {
       var on = z.on && AC.power === "on", sp = z.setpoint != null ? z.setpoint : null;
       var frac = sp != null ? (sp - 16) / 14 : 0.5;
       return '<div class="zone glass' + (on ? " on" : " off") + (heat ? " heat" : "") + (i === sheet.zoneIdx ? " focus" : "") + '" data-z="' + i + '">' +
@@ -475,7 +574,7 @@
   }
   function sheetKey(k) {
     var sh = sheet;
-    if (k === "back") { closeSheet(); return; }
+    if (k === "back") { if (sh.inMain) { sh.inMain = false; drawSheet(); return; } closeSheet(); return; }
     if (sh.id === "climate") {
       if (!AC || !AC.connected || !AC.zones.length) return;
       var z = AC.zones[sh.zoneIdx];
@@ -485,6 +584,7 @@
       $("sheet-main").innerHTML = zonesHtml();
       return;
     }
+    if (sh.id === "hub") { hubKey(k); return; }
     if (!sh.nav.length) return;
     if (k === "up" || k === "down") {
       var d = k === "up" ? -1 : 1, i = sh.navIdx + d;
@@ -556,6 +656,7 @@
     if (card && !sheet) { area = "cards"; idx = +card.getAttribute("data-i"); paintFocus(); openSheet(CARDS[idx].id); }
     else if (app && !sheet) { area = "apps"; appIdx = +app.getAttribute("data-a"); paintFocus(); launch(APPS[appIdx]); }
     else if (nav && sheet) { sheet.navIdx = sheet.sel = +nav.getAttribute("data-n"); drawSheet(); }
+    else if (zone && sheet && sheet.id === "hub") { sheet.inMain = true; sheet.item = +zone.getAttribute("data-z"); hubKey("ok"); }
     else if (zone && sheet) { sheet.zoneIdx = +zone.getAttribute("data-z"); sheetKey("ok"); }
   });
   document.addEventListener("wheel", function (e) {
@@ -581,12 +682,24 @@
       if (S && !sheet) { drawCards(); drawApps(); }
     });
   }
+  function refreshHub() {
+    return api("hub").then(function (h) {
+      if (h.error) return;
+      var had = !!(HUB && (HUB.pool || (HUB.speakers || []).length));
+      HUB = h;
+      var has = !!(HUB.pool || (HUB.speakers || []).length);
+      if (sheet && sheet.id === "hub") drawSheet();
+      else if (!sheet && had !== has) drawCards();
+      else refreshCard("hub");
+    }, function () {});
+  }
   function refreshAircon() {
     return api("aircon").then(function (a) {
       if (Object.keys(setWant).length) return;   // a change is on its way; do not jump back
       AC = a;
       if (sheet && sheet.id === "climate") { $("sheet-main").innerHTML = zonesHtml(); drawSheet(); }
-      else refreshCard("climate");
+      else { refreshCard("climate"); refreshCard("hub"); }
+      if (sheet && sheet.id === "hub") drawSheet();
     });
   }
 
@@ -627,14 +740,14 @@
     fakeGaps();
   }
 
-  refreshState().then(function () { refreshAircon(); });
+  refreshState().then(function () { refreshAircon(); refreshHub(); });
   awake();
   document.addEventListener("mousemove", awake);
   refreshWeather();
   setInterval(clock, 1000);
   setInterval(refreshState, 60000);
   setInterval(refreshWeather, 30 * 60000);
-  setInterval(function () { refreshAircon(); }, 20000);
+  setInterval(function () { refreshAircon(); refreshHub(); }, 20000);
   if (document.fonts) document.fonts.load("300 10px Antonio").then(function () { glassShown = ""; clock(); });
   window.addEventListener("resize", function () { glassShown = ""; clock(); });
 })();

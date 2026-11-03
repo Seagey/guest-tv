@@ -34,6 +34,14 @@
     {
       "label": "Pool gate",
       "code": "2481"
+    },
+    {
+      "label": "Garage",
+      "code": "7720"
+    },
+    {
+      "label": "Board shed",
+      "code": "0915"
     }
   ],
   "climate": {
@@ -47,7 +55,9 @@
   },
   "control": {
     "aircon": "all",
-    "lights": "all"
+    "lights": "all",
+    "speakers": "all",
+    "pool": "all"
   },
   "lights": {
     "kind": "demo",
@@ -69,5 +79,27 @@
         "studio-2"
       ]
     }
-  }
+  },
+  "pool": {
+    "kind": "demo",
+    "label": "Pool"
+  },
+  "speakers": {
+    "kind": "demo",
+    "rooms": {
+      "Living": "living",
+      "Deck": "deck",
+      "Main bedroom": "main-bedroom"
+    }
+  },
+  "notes": [
+    {
+      "title": "Late check-out",
+      "body": "Want a slow last morning? Ask Mia in the Airbnb app the day before. If no one is arriving that day, you can usually stay until 12pm."
+    },
+    {
+      "title": "The pool heater",
+      "body": "The pool is solar heated with a heat pump top-up. Turn the heater on from the TV or the Guest remote about 4 hours before you want a warm swim, and off when you go out."
+    }
+  ]
 }

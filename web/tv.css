@@ -230,6 +230,29 @@ body.mouse { cursor: default; }
 }
 .zone.on .pwr { background: rgba(159, 216, 255, 0.3); }
 .zone.on.heat .pwr { background: rgba(255, 180, 110, 0.32); }
+/* ---------- smart home ---------- */
+.card .hubrow { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; line-height: 2.25rem; white-space: nowrap; overflow: hidden; }
+.card .hubrow svg { width: 1.5rem; height: 1.5rem; flex: none; color: var(--text-2); }
+.card .hubrow i { font-style: normal; min-width: 5.5rem; color: var(--text-2); }
+.card .hubrow b { font-size: 1.75rem; font-weight: 640; }
+.card .hubrow span { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; }
+.hubtile { width: 24rem; }
+.hubtile > svg { display: block; width: 7rem; height: 7rem; margin: 2.5rem auto 2rem; color: rgba(255, 255, 255, 0.8); }
+.hubtile.on > svg { color: #fff; }
+.hubtile.warm > svg { color: var(--warm); }
+.hubtile .hubbig { margin: 2rem 0 1rem; font-family: "Antonio", "Inter", sans-serif; font-size: 8rem; line-height: 8rem; font-weight: 300; letter-spacing: -0.04em; }
+.hubtile.pool { width: 30rem; }
+.hubtile .one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hubtile .vol { height: 0.5rem; margin: 1.25rem 1rem 0; border-radius: 0.25rem; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+.hubtile .vol i { display: block; height: 100%; background: #fff; border-radius: 0.25rem; }
+.zone.on.warm .pwr { background: rgba(255, 216, 154, 0.3); }
+.hubnote { width: 30rem; align-self: flex-start; }
+.sheet-main .zones { padding-top: 0.75rem; }
+.zones.compact { gap: 1.25rem; }
+.zones.compact .zone { width: 19rem; padding: 1.75rem 1rem 1.5rem; }
+.zones.compact .dial { width: 13rem; height: 13rem; }
+.zones.compact .dial .val b { font-size: 4.75rem; line-height: 4.75rem; }
+.old .zones.compact > * { margin: 0 1.25rem 1.25rem 0; }
 .climate-note { margin-top: 1.75rem; font-size: 1.5rem; line-height: 2.125rem; color: var(--text-2); max-width: 70rem; }
 
 /* ---------- toast ---------- */
