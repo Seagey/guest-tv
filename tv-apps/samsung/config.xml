@@ -9,7 +9,6 @@
   <name>Guest TV</name>
   <icon src="icon.png"/>
   <access origin="*" subdomains="true"/>
-  <tizen:allow-navigation>*</tizen:allow-navigation>
   <tizen:privilege name="http://tizen.org/privilege/internet"/>
   <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
   <tizen:profile name="tv-samsung"/>
