@@ -57,9 +57,10 @@ TV buttons depend on the brand:
 | **Samsung** (Tizen, 2016 and later) | Yes, as an app the computer opens each time the TV comes on ([Samsung and LG](#samsung-and-lg)) | Yes. Netflix and YouTube open the show; other apps open on their home page | No. Samsung gives no way to read the screen |
 | **LG** (webOS) | Built the same way, through LG's Developer Mode. Not yet tried on a real LG | Built, not yet tried on a real LG | No |
 
-Built and tested on a TCL and a Toshiba, both Android TV 11, in November 2026. The Samsung and LG
-parts were tested against stand-in TVs on the computer (`tools/brands_test.py`), the same way
-couch-tv's were before they met a real TV. If you run it on something else, please open an issue
+Built and tested on a TCL and a Toshiba, both Android TV 11, in November 2026, and on a Samsung
+Frame (2021) on 4 November 2026: install, pairing and the welcome screen with its menus. LG is
+tested against a stand-in TV on the computer (`tools/brands_test.py`), the same way couch-tv's was
+before it met a real TV. If you run it on something else, please open an issue
 saying how it went.
 
 ## Setting it up with an AI agent

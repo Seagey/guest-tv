@@ -156,13 +156,26 @@ body.mouse { cursor: default; }
 /* ---------- sheet ---------- */
 .sheet {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; opacity: 0; pointer-events: none;
-  background: rgba(8, 8, 12, 0.42); -webkit-backdrop-filter: blur(2.5rem) saturate(150%); backdrop-filter: blur(2.5rem) saturate(150%);
+  background: rgba(7, 7, 10, 0.84); -webkit-backdrop-filter: blur(3rem) saturate(120%); backdrop-filter: blur(3rem) saturate(120%);
   transition: opacity 320ms var(--ease);
 }
+/* a menu open: the home fades away and the photo goes dark, so only the menu is on screen */
+.top, .home, .date { transition: opacity 320ms var(--ease); }
+body.sheeted .top, body.sheeted .home, body.sheeted .date, body.sheeted .gclock { opacity: 0; }
+/* inside a menu the panels are plain dark glass: no blur of their own, one light rim */
+.sheet .glass { background: rgba(255, 255, 255, 0.065); -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 0 0 0.0625rem rgba(255, 255, 255, 0.1), 0 1.5rem 3rem rgba(0, 0, 0, 0.35); }
+.sheet .zone.focus { background: rgba(255, 255, 255, 0.16); }
+.sheet .zone.on:not(.heat):not(.warm) { background: rgba(159, 216, 255, 0.1); }
+.sheet .zone.on.heat { background: rgba(255, 180, 110, 0.1); }
+.sheet .zone.on.warm { background: rgba(255, 216, 154, 0.1); }
+.sheet .photo-panel { box-shadow: inset 0 0 0 0.0625rem rgba(255, 255, 255, 0.1); }
 .sheet.on { opacity: 1; pointer-events: auto; }
 .sheet-in { position: absolute; top: var(--safe-y); bottom: 7rem; left: var(--safe-x); right: var(--safe-x); display: flex; gap: 3rem; transform: scale(0.98); transition: transform 320ms var(--ease); }
 .sheet.on .sheet-in { transform: none; }
-.sheet-nav { width: 26rem; flex: none; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; }
+.sheet-nav { width: 26rem; flex: none; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; min-height: 0; overflow: hidden; }
+.sheet-nav > * { flex: none; }
+.sheet-nav { -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent); mask-image: linear-gradient(180deg, #000 88%, transparent); }
 .sheet-nav h2 { font-size: 3rem; line-height: 3.5rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 1.5rem; }
 .sheet-nav .item {
   font-size: 1.75rem; line-height: 2.25rem; font-weight: 560; padding: 0.875rem 1.25rem; border-radius: 1rem; color: var(--text-2);
@@ -247,7 +260,7 @@ body.mouse { cursor: default; }
 .hubtile .vol i { display: block; height: 100%; background: #fff; border-radius: 0.25rem; }
 .zone.on.warm .pwr { background: rgba(255, 216, 154, 0.3); }
 .hubnote { width: 30rem; align-self: flex-start; }
-.sheet-main .zones { padding-top: 0.75rem; }
+.sheet-main .zones { padding: 0.75rem 0 0 0.75rem; }
 .zones.compact { gap: 1.25rem; }
 .zones.compact .zone { width: 19rem; padding: 1.75rem 1rem 1.5rem; }
 .zones.compact .dial { width: 13rem; height: 13rem; }
@@ -294,4 +307,6 @@ body.mouse { cursor: default; }
 /* no blur behind the glass: a darker tint keeps the words readable over the photo */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass { background: rgba(18, 18, 24, 0.58); }
+  .sheet { background: rgba(9, 9, 12, 0.95); }
+  .sheet .glass { background: rgba(255, 255, 255, 0.07); }
 }

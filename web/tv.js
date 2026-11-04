@@ -405,11 +405,13 @@
     if (id === "hub") { sheet.inMain = false; sheet.item = 0; refreshHub(); }
     drawSheet();
     $("sheet").classList.add("on");
+    document.body.classList.add("sheeted");
     paintFocus();
   }
   function closeSheet() {
     sheet = null;
     $("sheet").classList.remove("on");
+    document.body.classList.remove("sheeted");
     paintFocus();
   }
   function drawSheet() {
@@ -421,6 +423,8 @@
     if (sh.id === "climate") navHtml += '<p class="climate-note">' + esc(climateNote()) + "</p>";
     if (sh.id === "wifi" || sh.id === "checkout") navHtml += '<p class="climate-note">' + (sh.id === "wifi" ? "Point your phone's camera at the code to join." : "Thanks for looking after the place.") + "</p>";
     $("sheet-nav").innerHTML = navHtml;
+    var navEl = $("sheet-nav"), fo = navEl.querySelector(".item.focus") || navEl.querySelector(".item.sel");
+    navEl.scrollTop = fo ? Math.max(0, fo.offsetTop - navEl.offsetTop - navEl.clientHeight / 2 + fo.offsetHeight / 2) : 0;
     $("sheet-main").innerHTML = sheetMain();
     $("sheet-main").classList.toggle("mid", sh.id === "climate" || sh.id === "wifi" || sh.id === "checkout");
     var q = $("sheet-main").querySelectorAll("[data-qr]");
