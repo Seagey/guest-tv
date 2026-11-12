@@ -7,7 +7,7 @@ Homes live in data/homes/<id>/ (home.json + guide.json). Private values (the rea
 door codes, the guest's name, the aircon address) live in data/private.json, which never leaves this
 computer. The couch-tv TV app can show this page: point its bridge at this server.
 """
-import asyncio, datetime as dt, hashlib, hmac, json, os, re, secrets, socket, threading, time, urllib.parse, urllib.request
+import asyncio, datetime as dt, hashlib, hmac, ipaddress, json, os, re, secrets, socket, threading, time, urllib.parse, urllib.request
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -495,21 +495,92 @@ def tv_ip(h):
 
 
 def tv_kind(h):
-    """"android" (Google TV, Android TV: ADB), "samsung" or "lg" (tvbrands.py)."""
+    """"android" (Google TV, Android TV and Fire OS: ADB), or one of tvbrands.KINDS: "samsung", "lg",
+    "roku", "vidaa", "titan", "saphi", "panasonic", "vizio", "appletv", "vega"."""
     return os.environ.get("GUEST_TV_KIND") or h.get("tv_kind") or settings().get("tv_kind") or "android"
 
 
+def tv_page(hid, kind):
+    """guest-tv's TV page as a TV reaches it: by number, never a key in it (couch-tv#110)."""
+    base = (settings().get("tv_url") or "http://%s:%d" % (lan_ip(), PORT)).rstrip("/")
+    return "%s/tv/?tv=%s&brand=%s" % (base, urllib.parse.quote(hid), urllib.parse.quote(kind))
+
+
 def start_tv_watchers():
-    """Samsung and LG: open the guest-tv app each time the TV comes on (tvbrands.watch). One watcher
-    per TV. "tv_hook": false (per home or in settings.json) leaves the TV alone."""
+    """Every TV that is not Google TV, Android TV or Fire OS: open guest-tv each time the TV comes on
+    (tvbrands.watch). One watcher per TV. "tv_hook": false (per home or in settings.json) leaves the
+    TV alone. A TV that cannot show guest-tv (VIZIO) gets no watcher, only the Guest remote."""
     import tvbrands, tvctl
     seen = set()
     for hid in home_ids():
         h = load_home(hid)
         ip, kind = tv_ip(h), tv_kind(h)
-        if kind in ("samsung", "lg") and ip and (kind, ip) not in seen and h.get("tv_hook", settings().get("tv_hook", True)) is not False:
+        if kind in tvbrands.KINDS and ip and (kind, ip) not in seen and h.get("tv_hook", settings().get("tv_hook", True)) is not False:
             seen.add((kind, ip))
-            threading.Thread(target=tvbrands.watch, args=(tvctl.tv_for(ip, kind),), daemon=True).start()
+            tv = tvctl.tv_for(ip, kind)
+            tv.page = tv_page(hid, kind)
+            threading.Thread(target=tvbrands.watch, args=(tv,), daemon=True).start()
+
+
+# ---------------------------------------------------------------- wrong codes (from couch-tv#73)
+
+WRONG, WRONG_LOCK = {}, threading.Lock()   # address -> (window start, set of wrong values tried)
+WRONG_MAX, WRONG_WINDOW, WRONG_ADDRESSES = 5, 60.0, 1000
+
+
+def _loopback(addr):
+    try:
+        return ipaddress.ip_address(addr).is_loopback
+    except ValueError:
+        return False
+
+
+def wrong_limited(addr):
+    """Five different wrong remote codes or host keys from one address in a minute, then 429 for the
+    rest of that minute. This computer itself is never limited; X-Forwarded-For is never trusted."""
+    if _loopback(addr):
+        return False
+    with WRONG_LOCK:
+        w = WRONG.get(addr)
+        return bool(w) and time.monotonic() - w[0] < WRONG_WINDOW and len(w[1]) >= WRONG_MAX
+
+
+def note_wrong(addr, value):
+    if _loopback(addr):
+        return
+    with WRONG_LOCK:
+        t = time.monotonic()
+        w = WRONG.get(addr)
+        if not w or t - w[0] >= WRONG_WINDOW:
+            if len(WRONG) >= WRONG_ADDRESSES:   # memory stays small: drop the oldest
+                WRONG.pop(min(WRONG, key=lambda a: WRONG[a][0]), None)
+            w = WRONG[addr] = (t, set())
+        w[1].add(hashlib.sha256(value.encode("utf-8", "replace")).hexdigest()[:16])   # the same old code twice counts once
+
+
+def host_allowed(host):
+    """Only this computer's own names may be in the Host header: any IP address, .local names,
+    localhost, the host of public_url and tv_url, and "hosts" in settings.json. Anything else is a
+    page on some other site reaching this computer through DNS rebinding, so it gets 403 (couch-tv#73).
+    A request with no Host passes."""
+    if not host:
+        return True
+    host = host.strip().lower()
+    name = host[1:host.find("]")] if host.startswith("[") and "]" in host else host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+    name = name.rstrip(".")
+    try:
+        ipaddress.ip_address(name)
+        return True
+    except ValueError:
+        pass
+    if name == "localhost" or name.endswith(".local"):
+        return True
+    own = {socket.gethostname().lower(), local_name().lower()}
+    for u in (settings().get("public_url"), settings().get("tv_url")):
+        if u:
+            own.add((urllib.parse.urlparse(u).hostname or "").lower())
+    own.update(str(x).lower() for x in settings().get("hosts") or [])
+    return name in own
 
 
 def control(h, what):
@@ -687,6 +758,83 @@ def qr_svg(text):
     return b.getvalue()
 
 
+def qr_png(text):
+    """The same code as a PNG, for the TVs that draw the screen themselves (Roku, Apple TV): no SVG there."""
+    import segno
+    import io
+    b = io.BytesIO()
+    segno.make(text, error="m").save(b, kind="png", scale=10, border=2, dark="#111111", light="#ffffff")
+    return b.getvalue()
+
+
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def _t12(hhmm):
+    try:
+        hh, mm = (int(x) for x in (hhmm or "").split(":")[:2])
+    except ValueError:
+        return hhmm or ""
+    return "%d%s%s" % (hh % 12 or 12, (":%02d" % mm) if mm else "", "am" if hh < 12 else "pm")
+
+
+def _short(iso):
+    try:
+        d = dt.date.fromisoformat((iso or "")[:10])
+    except ValueError:
+        return ""
+    return "%s %d %s" % (DAYS[d.weekday()][:3], d.day, d.strftime("%b"))
+
+
+def native_screen(h, base):
+    """The welcome screen as plain data, for the TVs whose app draws it natively instead of showing
+    the /tv/ page: Roku (tv-apps/roku) and Apple TV (tv-apps/tvos). Same rules as the page: Wi-Fi,
+    door codes and the Guest remote only while public_state shows them, never a key, never a name
+    between stays. `base` is this computer's address as the TV reached it."""
+    st = public_state(h)
+    s, hid = st["stay"], h["id"]
+    guest, part = s.get("guest", ""), datetime_part()
+    eyebrow, title, sub = st["name"], "", ""
+    if st["mode"] == "guest":
+        eyebrow = "Staying with " + st["host"] if st.get("host") else st["name"]
+        title = (part + ", " + guest) if guest else "Welcome"
+        sub = ("Here until %s. Make yourself at home." % DAYS[dt.date.fromisoformat(s["to"]).weekday()]) if s.get("to") else "Make yourself at home."
+    elif s["phase"] in ("between", "before"):
+        eyebrow, title, sub = st.get("kind") or st["name"], "Welcome to %s" % st["name"], "Your stay details show here when you arrive."
+    elif s["phase"] == "arrival":
+        title = "Welcome" + (", " + guest if guest else "")
+        sub = "Check-in from %s today. Settle in, everything is here." % _t12(st.get("checkin"))
+    elif s["phase"] == "lastday":
+        title = part + (", " + guest if guest else "")
+        sub = "Check-out today at %s. Thanks for staying." % _t12(st.get("checkout_time"))
+    else:
+        title = ("Welcome" if s.get("night") == 1 else part) + (", " + guest if guest else "")
+        sub = "%s to %s · Night %s of %s" % (_short(s.get("from")), _short(s.get("to")), s.get("night"), s.get("nights"))
+    q = "home=" + urllib.parse.quote(hid)
+    wx = weather()
+    today = (wx.get("days") or [{}])[0] if wx.get("ok") else {}
+    hero = (st.get("photos") or {}).get("hero")
+    wifi = st["wifi"] if st["wifi"] and st["wifi"].get("ssid") else None
+    return {
+        "home": hid, "mode": st["mode"], "phase": s["phase"], "active": bool(s.get("active")),
+        "eyebrow": eyebrow or "", "title": title, "sub": sub, "welcome": st.get("welcome", ""),
+        "photo": "%s/tv/homes/%s.jpg" % (base, hero) if hero else None,
+        "wifi": {"ssid": wifi.get("ssid", ""), "password": wifi.get("password", "")} if wifi else None,
+        "wifi_qr": "%s/api/qr?%s&what=wifi&fmt=png" % (base, q) if wifi else None,
+        "remote_qr": "%s/api/qr?%s&what=%s&fmt=png" % (base, q, "remote" if st["remote_url"] else "phone"),
+        "remote_label": "Guest remote" if st["remote_url"] else "House info",
+        "access": [{"label": a.get("label", ""), "code": a.get("code", "")} for a in st["access"]],
+        "weather": {"place": wx.get("place", ""), "temp": wx["now"]["temp"], "code": wx["now"]["code"],
+                    "hi": today.get("hi"), "lo": today.get("lo"), "rain": today.get("rain")} if wx.get("ok") else None,
+        "time": now().strftime("%Y-%m-%dT%H:%M:%S"),
+    }
+
+
+def datetime_part():
+    hr = now().hour
+    return "Good morning" if hr < 12 else "Good afternoon" if hr < 18 else "Good evening"
+
+
 def wifi_qr(w):
     esc = lambda s: re.sub(r"([\\;,:\"])", r"\\\1", s or "")
     return "WIFI:T:WPA;S:%s;P:%s;;" % (esc(w.get("ssid")), esc(w.get("password")))
@@ -726,9 +874,27 @@ class H(BaseHTTPRequestHandler):
         return load_home(qs.get("home") or settings().get("default_home") or home_ids()[0])
 
     def is_host(self, qs):
-        return bool(qs.get("key")) and secrets.compare_digest(qs.get("key", ""), private().get("host_key", "-"))
+        key = qs.get("key", "")
+        if not key:
+            return False
+        ok = secrets.compare_digest(key.encode("utf-8", "replace"), private().get("host_key", "-").encode())
+        if not ok:
+            note_wrong(self.client_address[0], key)
+        return ok
+
+    def refused(self):
+        """Checks every request goes through first: the Host header, and too many wrong codes."""
+        if not host_allowed(self.headers.get("Host")):
+            self.send(403, {"error": "unknown host name"})
+            return True
+        if wrong_limited(self.client_address[0]):
+            self.send(429, {"error": "Too many wrong codes. Wait a minute, then scan the code on the TV again."})
+            return True
+        return False
 
     def do_GET(self):
+        if self.refused():
+            return
         path, qs = self.q()
         if path in ("/", ""):
             self.send_response(302)
@@ -770,7 +936,7 @@ class H(BaseHTTPRequestHandler):
             except Exception:
                 apps = []
             return self.send(200, {"apps": [{"id": a["id"], "name": a["name"]} for a in apps]})
-        if path == "/api/tv/status":   # host: what the TV is doing and what the Samsung or LG watcher did
+        if path == "/api/tv/status":   # host: what the TV is doing and what its watcher did
             h = self.home(qs)
             if not self.is_host(qs) or not h:
                 return self.send(403, {"error": "host key needed"})
@@ -778,26 +944,49 @@ class H(BaseHTTPRequestHandler):
             tv = tvctl.tv_for(tv_ip(h), tv_kind(h))
             out = {"kind": tv_kind(h), "ip": tv_ip(h)}
             if hasattr(tv, "is_on"):
-                out.update(on=tv.is_on(), front=tv.front() if tv.is_on() else None, log=tv.log)
+                on = tv.is_on()
+                out.update(on=on, front=tv.front() if on and tv.sees_front else None, log=tv.log,
+                           can_open=tv.can_open)
             return self.send(200, out)
+        if path == "/api/tv/keys":   # Fire TV on Vega OS: the page asks for the Guest remote's keys (a long poll)
+            h = self.home(qs)
+            import tvctl
+            tv = tvctl.tv_for(tv_ip(h), tv_kind(h)) if h and tv_ip(h) else None
+            if not hasattr(tv, "page_keys"):
+                return self.send(404, {"error": "this TV takes its keys directly"})
+            try:
+                after = int(qs.get("after") or 0)
+            except ValueError:
+                after = 0
+            return self.send(200, tv.page_keys(after, 20.0))
         if path == "/api/weather":
             return self.send(200, weather())
         if path == "/api/aircon":
             h = self.home(qs)
             return self.send(200, aircon_for(h) if h else {"connected": False})
+        if path == "/api/tv/native":   # Roku and Apple TV: the welcome screen as data their app draws
+            h = self.home(qs)
+            if not h:
+                return self.send(404, {"error": "no such home"})
+            return self.send(200, native_screen(h, "http://" + (self.headers.get("Host") or "%s:%d" % (lan_ip(), PORT))))
         if path == "/api/qr":
             h = self.home(qs)
+            png = qs.get("fmt") == "png"   # Roku and Apple TV draw PNGs, the page SVGs
+            code = (lambda t: self.send(200, qr_png(t), "image/png")) if png else (lambda t: self.send(200, qr_svg(t), "image/svg+xml"))
             if qs.get("what") == "wifi":
                 st = public_state(h)
                 if not st["wifi"]:
                     return self.send(404, {"error": "no wifi now"})
-                return self.send(200, qr_svg(wifi_qr(st["wifi"])), "image/svg+xml")
+                return code(wifi_qr(st["wifi"]))
             if qs.get("what") == "remote":
                 st = public_state(h)
                 if not st["remote_url"]:
                     return self.send(404, {"error": "no remote now"})
-                return self.send(200, qr_svg(st["remote_url"]), "image/svg+xml")
-            return self.send(200, qr_svg(phone_url(h["id"])), "image/svg+xml")
+                return code(st["remote_url"])
+            return code(phone_url(h["id"]))
+        if path in ("/titan", "/titan/"):   # the start page a Philips Titan OS app is given (tv-apps/titan)
+            with open(os.path.join(HERE, "tv-apps", "titan", "index.html"), "rb") as fh:
+                return self.send(200, fh.read(), TYPES[".html"], "no-cache")
         # files
         rel = {"/tv/": "/index.html", "/p/": "/phone.html", "/r/": "/remote.html"}.get(path, path)
         for pre in ("/tv/", "/p/", "/r/"):
@@ -814,7 +1003,11 @@ class H(BaseHTTPRequestHandler):
 
     def remote_ok(self, h, qs):
         code = h and remote_code(h)
-        return bool(code) and secrets.compare_digest(qs.get("c", ""), code)
+        given = qs.get("c", "")
+        ok = bool(code) and secrets.compare_digest(given.encode("utf-8", "replace"), code.encode())
+        if given and not ok:
+            note_wrong(self.client_address[0], given)
+        return ok
 
     def remote_post(self, path, h, qs, body):
         import guest_agent, tvctl
@@ -854,7 +1047,12 @@ class H(BaseHTTPRequestHandler):
         return self.send(400, {"error": "not allowed"})
 
     def do_POST(self):
+        if self.refused():
+            return
         path, qs = self.q()
+        # JSON only, so a form on some other web page cannot reach a handler (couch-tv#73)
+        if (self.headers.get("Content-Type") or "").split(";")[0].strip().lower() != "application/json":
+            return self.send(415, {"error": "send JSON with Content-Type: application/json"})
         n = int(self.headers.get("Content-Length") or 0)
         try:
             body = json.loads(self.rfile.read(n) or b"{}")
@@ -894,6 +1092,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lights_set(h, body["lights"], body.get("on") if isinstance(body.get("on"), bool) else None))
             return self.send(400, {"error": "nothing to change"})
         if path == "/api/log":   # the TV page reports its own script errors here (TVs have no console to look at)
+            os.makedirs(os.path.join(HERE, "logs"), exist_ok=True)   # a fresh clone has no logs/ yet
             with open(os.path.join(HERE, "logs", "tv-errors.log"), "a") as f:
                 f.write("%s %s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), self.client_address[0], json.dumps(body)[:600]))
             return self.send(200, {"ok": True})
@@ -923,7 +1122,7 @@ if __name__ == "__main__":
     import profiles
     profiles.start(settings())   # picks the guest profile in streaming apps on the guest TV
     threading.Thread(target=booking_loop, daemon=True).start()   # guest names from booking emails
-    start_tv_watchers()   # Samsung and LG: open guest-tv when the TV comes on
+    start_tv_watchers()   # every TV that is not Android TV: open guest-tv when the TV comes on
     srv = ThreadingHTTPServer((os.environ.get("HOST", "0.0.0.0"), PORT), H)
     print("guest-tv on http://%s:%d/tv/  (phone: /p/)" % (local_name(), PORT), flush=True)
     srv.serve_forever()

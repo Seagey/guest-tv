@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  guest-tv's start page for a Philips TV on Titan OS (docs/PHILIPS-TITAN.md, "The welcome screen").
+  New (Beta): checked in a desktop browser only, not yet opened on a real Titan OS TV.
+
+  Titan OS only runs web pages that are Titan apps (a published app, or a sandbox app in Titan's DevView
+  developer app). This page is the address such an app is given: a Titan app called "Guest TV". It
+  needs no key. It works two ways:
+
+  1. Served by guest-tv's computer (http://<computer>:5410/titan/): it moves straight to the welcome page.
+  2. Hosted anywhere else (for example a public https address, if Titan will not take a home network
+     address, or the copy tools/tv_app.py build makes): it needs the computer's address, from the app's
+     own address as ?guest=192.0.2.20:5410, or baked in by the build, or typed once with the TV remote.
+     It then moves to http://<computer>/tv/?tv=<home>&brand=titan.
+
+  Written for old browsers on purpose (Titan OS ships Chrome 84 on 2020 to 2022 TVs): ES5, no fetch.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Guest TV</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #14161d; color: #f7f6f3;
+    font: 32px/1.4 "Helvetica Neue", Arial, sans-serif; }
+  main { position: absolute; left: 50%; top: 50%; width: 1100px; margin: -220px 0 0 -550px; }
+  h1 { font-size: 64px; font-weight: 600; margin: 0 0 24px; }
+  p { margin: 0 0 24px; color: #c8c8c8; }
+  input { width: 100%; box-sizing: border-box; font: inherit; padding: 18px 24px; border-radius: 14px;
+    border: 3px solid #555; background: #1c1f22; color: #fff; outline: none; }
+  input:focus { border-color: #fff; }
+  .err { color: #ff9a8a; min-height: 45px; margin-top: 16px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guest TV</h1>
+  <p id="msg">Opening the welcome screen...</p>
+  <form id="form" class="hidden" autocomplete="off">
+    <input id="field" spellcheck="false">
+  </form>
+  <div id="err" class="err"></div>
+</main>
+<script>
+(function () {
+  "use strict";
+  // tools/tv_app.py build fills these in; left empty, the page asks once.
+  var PRESET = {"guest": "", "home": ""};
+  var Q = location.search;
+  var STORE = "guesttv.titan.computer";
+  var TV = (Q.match(/[?&]tv=([a-z0-9-]+)/) || [])[1] || PRESET.home || "";
+  var msg = document.getElementById("msg"), form = document.getElementById("form"),
+      field = document.getElementById("field"), err = document.getElementById("err");
+
+  function get(k) { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }
+  function set(k, v) { try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {} }
+  if (/[?&]reset=1/.test(Q)) set(STORE, "");
+
+  function ask(text, onDone) {
+    msg.textContent = text;
+    field.type = "text";
+    field.value = "";
+    form.className = "";
+    field.focus();
+    form.onsubmit = function (e) { e.preventDefault(); onDone(field.value.replace(/^\s+|\s+$/g, "")); };
+  }
+
+  function path() { return "/tv/?" + (TV ? "tv=" + TV + "&" : "") + "brand=titan"; }
+
+  // Is this page on guest-tv's computer? It answers /api/health on the same address.
+  function health(done) {
+    var x = new XMLHttpRequest();
+    x.open("GET", "/api/health", true);
+    x.timeout = 4000;
+    x.onload = function () { done(x.status === 200); };
+    x.onerror = x.ontimeout = function () { done(false); };
+    x.send();
+  }
+
+  var ADDR = /^[A-Za-z0-9.-]{1,253}(:\d{2,5})?$/;
+  function toComputer(addr) {
+    if (!ADDR.test(addr)) {
+      err.textContent = "Type the address like 192.0.2.20:5410.";
+      return ask("Type the address of the computer that runs guest-tv, for example 192.0.2.20:5410.", toComputer);
+    }
+    if (addr.indexOf(":") < 0) addr += ":5410";
+    set(STORE, addr);
+    msg.textContent = "Opening the welcome screen on " + addr + "...";
+    location.replace("http://" + addr + path());
+  }
+
+  health(function (here) {
+    if (here) { msg.textContent = "Opening the welcome screen..."; return location.replace(path()); }
+    var given = decodeURIComponent((Q.match(/[?&]guest=([^&]+)/) || [])[1] || "");
+    var addr = given || PRESET.guest || get(STORE);
+    if (addr) return toComputer(addr);
+    ask("Type the address of the computer that runs guest-tv, for example 192.0.2.20:5410.", toComputer);
+  });
+})();
+</script>
+</body>
+</html>

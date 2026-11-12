@@ -1,0 +1,12 @@
+# Add these to the manifest.toml that `vega project generate` made. Everything else in that file stays.
+
+# guest-tv's page comes from the computer on your own network, over plain http (Amazon blocks http
+# unless asked). Put the computer's address here instead of "*" if you want it tighter.
+[network-traffic-policy.cleartext]
+allowed-domains = ["*"]
+
+# Lets the computer open the app by DIAL, without Amazon's tools on it. Whether Amazon allows this for
+# a sideloaded app is not documented: it is optional.
+[[extras]]
+key = "dial_id"
+value = "GuestTV"

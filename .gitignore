@@ -13,6 +13,10 @@ tvs/
 build/
 data/*.key
 data/*-devmode.json
+data/vidaa/
+data/philips/
+tv-apps/vega/src/guest.json
 .apk-piece
 *.apk
 .DS_Store
+tv-apps/tvos/Config/Signing.mine.xcconfig

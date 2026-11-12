@@ -277,7 +277,13 @@ SAM["up"] = False
 time.sleep(0.6)
 sam.quiet_until = 0
 SAM["up"], SAM["visible"] = True, None
-check("back on the network after being off: guest-tv opens", wait_for(lambda: SAM["launched"][-1:] == ["GuestTVApp.Home"] and len(SAM["launched"]) == 2, 4))
+time.sleep(1.5)
+check("a short Wi-Fi dropout is not a switch on: left alone (couch-tv#53)", len(SAM["launched"]) == 1)
+sam.GONE_IS_OFF = 0.5   # stands in for 2 minutes
+SAM["up"] = False
+time.sleep(1.2)
+SAM["up"] = True
+check("gone longer than that, then back: guest-tv opens", wait_for(lambda: SAM["launched"][-1:] == ["GuestTVApp.Home"] and len(SAM["launched"]) == 2, 4))
 stop.set()
 check("the watcher wrote down what it did", any("opened guest-tv" in x for x in sam.log))
 
@@ -337,6 +343,14 @@ run(serve(lg_remote, "127.0.0.1", LG_PORTS[1], ssl=TLS))
 LG["plain"] = False
 lg2 = tvbrands.LGTV("127.0.0.1")
 check("plain port closed: the encrypted one is used", lg2.is_on() is True and lg2.url.startswith("wss://"))
+check("the port that answered is kept, and tried first next time (couch-tv#71)",
+      open(lg2.port_file).read() == str(LG_PORTS[1]) and tvbrands.LGTV("127.0.0.1")._urls()[0].startswith("wss://"))
+tvbrands._keep(lg2.devmode_file, json.dumps({"date": time.strftime("%Y-%m-%d"), "ok": False, "at": time.time()}))
+check("a failed Extend is not tried again at once", lg2.devmode_due() is False)
+tvbrands._keep(lg2.devmode_file, json.dumps({"date": time.strftime("%Y-%m-%d"), "ok": False, "at": time.time() - 3700}))
+check("a failed Extend is tried again after an hour", lg2.devmode_due() is True)
+check("long tokens are kept out of the Extend error text (couch-tv#66)",
+      "abcdef0123456789abcdef0123456789" not in tvbrands._scrub("failed: session abcdef0123456789abcdef0123456789 expired"))
 LG["buttons"].clear()
 lg2.key("right")
 check("buttons over the encrypted pointer socket", wait_for(lambda: LG["buttons"] == ["RIGHT"]))

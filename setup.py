@@ -88,7 +88,7 @@ def checks(tv_ip=None, tv_kind="android"):
              "System Settings > Energy: turn on 'Prevent automatic sleeping', or run: sudo pmset -a sleep 0")
     else:
         say("  INFO This computer must stay on and never sleep. It runs the TV page, the remote and the agent.")
-    if tv_kind in ("samsung", "lg"):
+    if tv_kind not in ("android", "fire"):
         return brand_checks(line, tv_ip, tv_kind) and good
     for mod, pkg in (("segno", "segno"), ("adb_shell", "adb-shell"), ("rsa", "rsa")):
         try:
@@ -120,7 +120,7 @@ def checks(tv_ip=None, tv_kind="android"):
 
 
 def brand_checks(line, tv_ip, kind):
-    """Samsung and LG: no ADB. The TV's network remote, accepted once on the TV."""
+    """Every TV but Android: no ADB. The TV's network remote, accepted once on the TV."""
     for mod, pkg in (("segno", "segno"), ("websocket", "websocket-client")):
         try:
             __import__(mod)
@@ -129,6 +129,18 @@ def brand_checks(line, tv_ip, kind):
             line(False, "Python package %s" % pkg, ".venv/bin/pip install %s" % pkg)
     sys.path.insert(0, HERE)
     import tvbrands
+    if kind not in ("samsung", "lg"):
+        import tvctl
+        pair = "Run: TV_KIND=%s TV_IP=%s .venv/bin/python tools/tv_app.py pair" % (kind, tv_ip)
+        if tv_ip:
+            tv = tvctl.tv_for(tv_ip, kind)
+            line(tv.is_on() is not None, "The TV at %s answers on the Wi-Fi" % tv_ip,
+                 "Switch the TV on, and read docs/ for this TV (README, 'Will it work on my TV?').")
+            if not tv.can_open:
+                line(True, "This TV gets the Guest remote only: its welcome screen cannot open on the TV")
+        say("  Next: TV_KIND=%s TV_IP=%s .venv/bin/python tools/tv_app.py status, then install, pair and open "
+            "(%s)" % (kind, tv_ip or "<tv address>", pair.split(": ", 1)[1]))
+        return True
     if kind == "samsung":
         cli = shutil.which("apps2samsung-cli") or os.path.expanduser("~/Applications/apps2samsung/cli/apps2samsung-cli")
         line(os.path.exists(cli), "Apps2Samsung, to install the app on the TV",
@@ -291,13 +303,26 @@ def main():
         cal = ask("Calendar link", home.get("calendar_url", ""))
         if cal:
             home["calendar_url"] = cal
-    brands = ["android", "samsung", "lg"]
+    brands = ["android", "samsung", "lg", "roku", "vidaa", "titan", "saphi", "panasonic", "vizio", "appletv", "vega"]
     st["tv_kind"] = brands[pick("What kind of TV?", [
-        ("Google TV or Android TV", "TCL, Hisense, Sony, Philips, Kogan, Chromecast with Google TV. guest-tv can be its home screen."),
+        ("Google TV, Android TV or Fire TV (Fire OS)", "TCL, Hisense Google TV, Sony, Philips Android, Kogan, Chromecast, Fire TV Stick. guest-tv can be its home screen."),
         ("Samsung", "2016 or later. guest-tv is an app this computer opens each time the TV comes on."),
-        ("LG", "webOS. The same as Samsung, through LG's Developer Mode. Not yet tried on a real LG.")],
+        ("LG", "webOS, and webOS TV Lite. The same as Samsung, through LG's Developer Mode."),
+        ("Roku", "TV or box. guest-tv is a channel this computer opens each time the TV comes on (Beta)."),
+        ("Hisense with VIDAA", "guest-tv opens in the TV's browser each time it comes on (Beta)."),
+        ("Philips with Titan OS", "The Guest remote works; the welcome screen needs a Titan app (Beta)."),
+        ("Older Philips with Saphi", "About 2015 to 2019. The Guest remote, and guest-tv in the TV's browser where the TV has one (Beta)."),
+        ("Panasonic Viera", "My Home Screen. guest-tv opens in the TV's browser just after it comes on (Beta)."),
+        ("VIZIO", "SmartCast or VIZIO OS. The Guest remote only: no welcome screen on the TV (Beta)."),
+        ("Apple TV", "guest-tv is an Apple TV app this computer opens when the Apple TV wakes. Needs a Mac (Beta)."),
+        ("Fire TV on Vega OS", "Fire TV Stick 4K Select and newer. An app you build once with Amazon's free tools (Beta).")],
         brands.index(st.get("tv_kind") or "android") + 1)]
     st["tv"] = ask("The TV's IP address (TV Settings > Network > About)", st.get("tv", ""))
+    if st["tv_kind"] == "android":   # optional, off unless chosen (Fire TV gets it anyway)
+        st["home_watch"] = pick("Home button watch? Some TVs (Haier, some TCL and Xiaomi) open their own home after Home or a restart.", [
+            ("No", "Leave it off. Pick this unless your TV does that."),
+            ("Yes", "The couch-tv TV app puts guest-tv back on top. The TV's own home may flash up first.")],
+            2 if st.get("home_watch") else 1) == 1
     st.setdefault("default_home", hid)
 
     say("\nWhat may guests control?")

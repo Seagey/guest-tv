@@ -28,6 +28,30 @@ APPS = [
     {"id": "spotify", "name": "Spotify", "package": "com.spotify.tv.android", "jw": [], "link": "app"},
 ]
 BY_ID = {a["id"]: a for a in APPS}
+
+# Android package names only: letters, digits and underscores, in two or more dot separated parts.
+# Every package that reaches the TV's shell goes through check_package first, because adb_shell sends
+# one line to the TV's shell (couch-tv#72: "a.b;touch /sdcard/proof" ran on a TV there). guest-tv's
+# packages come from the fixed table above, so this is the second lock, not the first.
+PACKAGE_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+")
+COMPONENT_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+/[A-Za-z0-9_.$]+")
+
+
+class UnsafeInput(ValueError):
+    """A value that must never reach the TV's shell."""
+
+
+def check_package(package):
+    if not isinstance(package, str) or len(package) > 200 or not PACKAGE_RE.fullmatch(package):
+        raise UnsafeInput("refused unsafe app name: %r" % str(package)[:80])
+    return package
+
+
+def check_component(component):
+    """package/activity, as Android writes a home screen down (tools/tv_app.py home and undo)."""
+    if not isinstance(component, str) or len(component) > 300 or not COMPONENT_RE.fullmatch(component):
+        raise UnsafeInput("refused unsafe component name: %r" % str(component)[:80])
+    return component
 BY_JW = {j: a for a in APPS for j in a["jw"]}
 KEYS = {"up": "DPAD_UP", "down": "DPAD_DOWN", "left": "DPAD_LEFT", "right": "DPAD_RIGHT", "ok": "DPAD_CENTER",
         "back": "BACK", "home": "HOME", "play_pause": "MEDIA_PLAY_PAUSE", "next": "MEDIA_NEXT",
@@ -89,11 +113,12 @@ class TV:
 
     def open_app(self, app_id):
         a = BY_ID[app_id]
-        self.sh("monkey -p %s -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null 2>&1" % a["package"], 15)
+        self.sh("monkey -p %s -c android.intent.category.LEANBACK_LAUNCHER 1 >/dev/null 2>&1" % check_package(a["package"]), 15)
 
     def open_link(self, uri, app_id):
         """A JustWatch intent:// link for one show, opened only in the app it belongs to."""
         a = BY_ID[app_id]
+        check_package(a["package"])
         uri = re.sub(r"[^A-Za-z0-9:/?#\[\]@!$&()*+,;=._~%-]", "", uri)   # no quotes or spaces reach the shell
         uri = re.sub(r"component=([^/;]+)/[^;]+", r"package=\1", uri)
         if uri.startswith("intent:") and "package=" not in uri and uri.endswith(";end"):
@@ -129,6 +154,7 @@ class TV:
         return self.playing("com.spotify.tv.android")
 
     def playing(self, package):
+        check_package(package)
         out = self.sh("dumpsys media_session | grep -A14 'package=%s' | grep -m1 'state=PlaybackState'" % package, 10)
         return "state=3" in out
 
@@ -137,12 +163,14 @@ _tvs = {}
 
 
 def tv_for(ip, kind=None):
-    """The TV at this address. kind "samsung" or "lg" gives tvbrands' version of the same calls."""
+    """The TV at this address. "android" (or nothing): Google TV, Android TV and Fire OS over ADB.
+    Any other kind ("samsung", "lg", "roku", "vidaa", "titan", "saphi", "panasonic", "vizio",
+    "appletv", "vega") gives that TV's driver from tvbrands.KINDS, with the same calls."""
     k = (kind or "android", ip)
     if k not in _tvs:
-        if kind in ("samsung", "lg"):
+        if kind and kind not in ("android", "fire"):
             import tvbrands
-            _tvs[k] = tvbrands.SamsungTV(ip) if kind == "samsung" else tvbrands.LGTV(ip)
+            _tvs[k] = tvbrands.make(kind, ip)
         else:
             _tvs[k] = TV(ip)
     return _tvs[k]

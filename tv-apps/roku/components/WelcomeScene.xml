@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- guest-tv's welcome screen on a Roku: the home's photo, the clock and date, the welcome, the Wi-Fi and
+     Guest remote cards, weather, door codes (only while the computer shows them) and the app row. The
+     pieces that change are made in WelcomeScene.brs; this file only holds what never changes. -->
+<component name="WelcomeScene" extends="Scene">
+    <interface>
+        <!-- the home to show; set by main.brs from the launch parameters, else pkg:/config.json -->
+        <field id="home" type="string" onChange="onHome" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/WelcomeScene.brs" />
+    <children>
+        <Rectangle id="base" width="1920" height="1080" color="0x0B0B0EFF" />
+        <Poster id="photo" width="1920" height="1080" loadDisplayMode="scaleToZoom" />
+        <Poster id="scrim" uri="pkg:/images/ui/scrim.png" width="1920" height="1080" loadDisplayMode="scaleToFill" />
+        <Group id="screen" visible="false">
+            <Label id="date" wrap="false" horizAlign="center" width="1920" translation="[0, 58]" />
+            <Label id="clock" wrap="false" horizAlign="center" width="1920" translation="[0, 30]" />
+            <Label id="eyebrow" wrap="false" translation="[80, 486]" width="1400" />
+            <Label id="title" wrap="false" translation="[80, 520]" width="1760" />
+            <Label id="sub" wrap="false" translation="[80, 600]" width="1760" />
+            <Group id="cards" translation="[80, 660]" />
+            <Group id="apps" translation="[80, 944]" />
+        </Group>
+        <Group id="wait">
+            <Label id="waitBig" wrap="false" horizAlign="center" width="1920" translation="[0, 430]" />
+            <Label id="waitSmall" wrap="true" horizAlign="center" width="1920" translation="[0, 492]" />
+        </Group>
+        <Group id="toast" visible="false">
+            <Poster id="toastBg" uri="pkg:/images/ui/pill.9.png" />
+            <Label id="toastText" wrap="false" horizAlign="center" vertAlign="center" />
+        </Group>
+        <Timer id="tick" repeat="true" duration="5" />
+        <Timer id="refresh" repeat="true" duration="60" />
+        <Timer id="toastTimer" repeat="false" duration="4" />
+    </children>
+</component>
