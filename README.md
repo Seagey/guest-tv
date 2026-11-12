@@ -57,8 +57,8 @@ does, the same way couch-tv does it there:
 
 | Your TV | Welcome screen | TV buttons, apps and shows from the phone | Guest profile picker |
 |---|---|---|---|
-| **Google TV or Android TV** (TCL, Hisense Google TV, Sony, Philips Android, Kogan, Haier, Chromecast with Google TV, Google TV Streamer, Onn, Nvidia Shield) | Yes, as the TV's home screen, with the couch-tv TV app | Yes | Yes (Stan tested; Netflix by profile position) |
-| **Fire TV on Fire OS** (Fire OS 6, 7 and 8: Stick 4K 1st gen and newer, Stick 4K Max, Cube) | Partial: the couch-tv TV app takes the Home key back, but Amazon's home flashes up first (Fire OS 6 needs a couch-tv release newer than 0.3) | Yes, over ADB | Not yet |
+| **Google TV or Android TV** (TCL, Hisense Google TV, Sony, Philips Android, Kogan, Haier, Chromecast with Google TV, Google TV Streamer, Onn, Nvidia Shield) | Yes, as the TV's home screen: the Guest TV app ([the quick way](#the-quick-way)) or the couch-tv TV app ([by hand](#setup)) | Yes | Yes (Stan tested; Netflix by profile position) |
+| **Fire TV on Fire OS** (Fire OS 6, 7 and 8: Stick 4K 1st gen and newer, Stick 4K Max, Cube) | Partial: the Guest TV app opens from the app row; set up by hand, the couch-tv TV app takes the Home key back, but Amazon's home flashes up first (Fire OS 6 needs a couch-tv release newer than 0.3) | Yes, over ADB | Not yet |
 | **Fire TV on Vega OS** (Stick 4K Select and newer) | **New (Beta)**: guest-tv's own app, built once with Amazon's free tools, opened when the stick comes up ([how](docs/FIRE-VEGA.md)) | Arrows, OK and Back while guest-tv is in front, not volume or power; Netflix and YouTube open the show | No |
 | **Samsung** (Tizen, 2016 and later) | Yes, as an app the computer opens each time the TV comes on ([how](#samsung)) | Yes. Netflix and YouTube open the show; other apps open on their home page | No |
 | **LG** (webOS, and webOS TV Lite) | Yes, as an app the computer opens each time the TV comes on, through LG's Developer Mode ([how](#lg)) | Yes. Netflix and YouTube open the show; other apps open on their home page | No |
@@ -109,15 +109,20 @@ address. Needs Python 3.10 or newer and [Claude Code](#what-you-need) signed in 
 
 **2. On the TV:**
 
-1. Install **Downloader** (by AFTVnews) from the TV's app store (Google Play, or the Amazon Appstore on
-   a Fire TV). It is free.
-2. Open Downloader, type **`GUEST_SHORT_LINK`** in its address box with the TV remote, and press Go.
-   It downloads the Guest TV app. When the TV asks, let Downloader install apps, then press Install.
-3. Open **Guest TV**. It finds guest-tv on your Wi-Fi by itself. If it does not, type the address
-   step 1 showed.
-4. To make it the TV's home screen, press **Make Guest TV the home screen** in the app and say yes.
-   (Fire TV and some Google TVs keep their own home on the Home button: switch on the app's Home
-   button watch in its settings, then in the TV's Settings, Accessibility.)
+1. Install **Downloader** (the free one by AFTVnews) from the TV's app store (Google Play, or the
+   Amazon Appstore on a Fire TV).
+2. Open Downloader, type **`couchtv.sites.underseage.studio/guest`** with the TV remote, and press Go.
+   It downloads the Guest TV app (`guest-tv.apk` from this repo's
+   [latest release](https://github.com/Seagey/guest-tv/releases/latest)).
+3. The first time, the TV asks to let Downloader install apps: press **Settings**, switch Downloader
+   on, press Back. (Fire TV: **Settings, My Fire TV, Developer options, Install unknown apps**.) Then
+   press **Install**, then **Open**.
+4. **Guest TV** finds guest-tv on your Wi-Fi by itself in a few seconds and shows the welcome screen.
+   If it does not, type the number step 1 showed and press **Connect**.
+5. Optional: hold **Back** (or press **Menu** on a Fire TV remote) for Guest TV's settings, and press
+   **Make Guest TV the home screen**. If Home still opens the TV's own home, switch on **Home button
+   watch** there and in the TV's **Settings, Accessibility**. On a Fire TV, Amazon's Home button keeps
+   Amazon's home: open Guest TV from the app row.
 
 **3. On your phone:** scan the **Guest remote** code on the TV and ask for something.
 
@@ -144,9 +149,10 @@ anything for you and never picks the Open level for you.
 - **Claude Code**, installed and signed in on that computer. The agent runs `claude -p` on your own
   Claude plan, with `ANTHROPIC_API_KEY` stripped first, so it never bills an API key.
 - **One Wi-Fi.** The TV, the aircon, the lights, the computer and the guest's phone all on it.
-- **The couch-tv TV app**, `couch-tv-home.apk`, from the
-  [couch-tv Releases page](https://github.com/Seagey/couch-tv/releases). It shows guest-tv full
-  screen and opens the TV's real apps from it.
+- **A TV app** on a Google TV, Android TV or Fire TV: the Guest TV app (`guest-tv.apk`,
+  [the quick way](#the-quick-way), no ADB), or for the by hand setup below the couch-tv TV app,
+  `couch-tv-home.apk`, from the [couch-tv Releases page](https://github.com/Seagey/couch-tv/releases).
+  Either shows guest-tv full screen and opens the TV's real apps from it.
 - Optional: **AirTouch 5** aircon, smart lights through **Home Assistant** or **Philips Hue**,
   **Spotify** on the TV, and **Node.js 20+** and Google Chrome for agentic booking.
 
@@ -548,7 +554,7 @@ the TV: the couch-tv TV app (Google TV) or guest-tv's own app or the TV's browse
 | `tvctl.py` | TV control over ADB, from fixed tables of keys and apps |
 | `tvbrands.py` | the same for Samsung and LG, the list of every other TV, and the hook that opens guest-tv when the TV comes on |
 | `tv_roku.py`, `tv_vidaa.py`, `tv_philips.py`, `tv_panasonic.py`, `tv_vizio.py`, `tv_appletv.py`, `tv_vega.py` | one self contained driver per TV, built on `tvbrands.py` |
-| `tv-apps/` | guest-tv's own TV apps: Samsung, LG, Roku, Apple TV (`tvos/`), Fire TV Vega, and the Titan start page (`tools/tv_app.py build <kind>` packs them) |
+| `tv-apps/` | guest-tv's own TV apps: Guest TV for Android TV and Fire TV (`android/`, built by its `build.sh`), Samsung, LG, Roku, Apple TV (`tvos/`), Fire TV Vega, and the Titan start page (`tools/tv_app.py build <kind>` packs them) |
 | `docs/` | setup and limits for each TV that is not Google TV, Samsung or LG |
 | `devices.py` | smart lights (Home Assistant, Hue) and your own actions |
 | `profiles.py` | picks the Guest profile when a streaming app asks "Who's watching?" |
@@ -560,6 +566,7 @@ the TV: the couch-tv TV app (Google TV) or guest-tv's own app or the TV's browse
 | `data/private.json` | your Wi-Fi, codes, guest names, tokens, host key. Made on first run, never in git |
 | `data/actions.example.json` | example buttons for agent level Plus |
 | `tools/` | `tv_app.py` (put it on the TV), `tvui.py` (step through the TV by hand), the tests (`brands_test.py`, `security_test.py` and one `<kind>_test.py` per TV, all against stand-ins) |
+| `scripts/` | `start.sh` (the quick way, on the computer) and `privacy-scan.sh` |
 | `service/` | keep it running on a Mac (launchd) or Linux (systemd) |
 | `web/` | the TV page, the phone pages, fonts and the demo photos |
 

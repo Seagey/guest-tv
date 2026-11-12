@@ -1124,5 +1124,5 @@ if __name__ == "__main__":
     threading.Thread(target=booking_loop, daemon=True).start()   # guest names from booking emails
     start_tv_watchers()   # every TV that is not Android TV: open guest-tv when the TV comes on
     srv = ThreadingHTTPServer((os.environ.get("HOST", "0.0.0.0"), PORT), H)
-    print("guest-tv on http://%s:%d/tv/  (phone: /p/)" % (local_name(), PORT), flush=True)
+    print("guest-tv on http://%s:%d/tv/  (phone: /p/; a TV app that asks wants the number: %s)" % (local_name(), PORT, lan_ip()), flush=True)
     srv.serve_forever()

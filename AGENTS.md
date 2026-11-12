@@ -4,7 +4,9 @@ Read README.md first. This file is what a person's agent needs to finish the set
 
 ## Walk the owner through setup
 
-Run `.venv/bin/python setup.py --check` first and fix anything marked FIX. Then ask the owner the
+The quickest path is README "The quick way": `sh scripts/start.sh` on the computer, then the Guest
+TV app on a Google TV, Android TV or Fire TV through Downloader, with no ADB. Offer it first for those
+TVs; the ADB steps below remain for owners who want them. Run `.venv/bin/python setup.py --check` first and fix anything marked FIX. Then ask the owner the
 same questions `setup.py` asks, one at a time, in plain words (or let them run `setup.py` themselves):
 
 1. **What kind of place?** A guest room in their home, or a place guests stay in (Airbnb, holiday home).
