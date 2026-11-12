@@ -11,9 +11,10 @@ It is a cut down copy of couch-tv's TV home app (same author, MIT), with its own
 
 1. On the TV, open the app store (Google Play on a Google TV or Android TV, the Amazon Appstore on a
    Fire TV), search for **Downloader** (the free one by AFTVnews) and install it.
-2. Open Downloader and type the link to `guest-tv.apk`. From a guest-tv release on GitHub that is
-   `github.com/Seagey/guest-tv/releases/latest/download/guest-tv.apk`; a shorter link pointing at the
-   same file works the same way.
+2. Open Downloader, type the code **`1061533`** and press **Go**. It points at
+   `couchtv.sites.underseage.studio/guest`, which downloads `guest-tv.apk` from the latest release.
+   Typing that short link, or the full link
+   `github.com/Seagey/guest-tv/releases/latest/download/guest-tv.apk`, works the same way.
 3. The first time, Android asks to let Downloader install apps. Press **Settings**, switch Downloader
    on, then press Back. (Fire TV: **Settings, My Fire TV, Developer options, Install unknown apps**,
    Downloader on. If Developer options is missing, open **Settings, My Fire TV, About** and press OK

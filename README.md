@@ -111,9 +111,10 @@ address. Needs Python 3.10 or newer and [Claude Code](#what-you-need) signed in 
 
 1. Install **Downloader** (the free one by AFTVnews) from the TV's app store (Google Play, or the
    Amazon Appstore on a Fire TV).
-2. Open Downloader, type **`couchtv.sites.underseage.studio/guest`** with the TV remote, and press Go.
-   It downloads the Guest TV app (`guest-tv.apk` from this repo's
-   [latest release](https://github.com/Seagey/guest-tv/releases/latest)).
+2. Open Downloader, type the code **`1061533`** with the TV remote, and press **Go**. It downloads
+   the Guest TV app (`guest-tv.apk` from this repo's
+   [latest release](https://github.com/Seagey/guest-tv/releases/latest)). If the code does not
+   work, type **`couchtv.sites.underseage.studio/guest`** instead and press Go.
 3. The first time, the TV asks to let Downloader install apps: press **Settings**, switch Downloader
    on, press Back. (Fire TV: **Settings, My Fire TV, Developer options, Install unknown apps**.) Then
    press **Install**, then **Open**.

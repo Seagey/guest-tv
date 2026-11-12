@@ -5,7 +5,8 @@ Read README.md first. This file is what a person's agent needs to finish the set
 ## Walk the owner through setup
 
 The quickest path is README "The quick way": `sh scripts/start.sh` on the computer, then the Guest
-TV app on a Google TV, Android TV or Fire TV through Downloader, with no ADB. Offer it first for those
+TV app on a Google TV, Android TV or Fire TV through Downloader (the code `1061533`, or the short link
+`couchtv.sites.underseage.studio/guest`), with no ADB. Offer it first for those
 TVs; the ADB steps below remain for owners who want them. Run `.venv/bin/python setup.py --check` first and fix anything marked FIX. Then ask the owner the
 same questions `setup.py` asks, one at a time, in plain words (or let them run `setup.py` themselves):
 
@@ -156,3 +157,10 @@ What we saw per app (TCL Android TV 11, Oct 2026):
 
 On-screen keyboards in apps (Stan) also take a tap as "move focus": tap a key, then `key DPAD_CENTER`.
 Before pressing anything near a "Delete" button, read the screen again and check where the focus is.
+
+## Keep the website in step
+
+guest-tv has a website for hosts. Its setup steps, its "Will it work on my TV?" check, its limits and
+its FAQ are taken from this README, this file and `docs/`. Whenever you change any of those (a setup
+step, the TV table, a limit, a new feature, the Downloader code or short link), say so in the commit
+or pull request, so the website is updated in the same job and the two never disagree.
