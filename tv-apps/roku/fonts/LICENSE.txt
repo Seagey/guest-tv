@@ -1,0 +1,2 @@
+Inter and Antonio, the fonts guest-tv's TV page uses, as TrueType files for the Roku (taken from
+couch-tv's Roku channel). Both are under the SIL Open Font License 1.1: https://openfontlicense.org

@@ -4,4 +4,5 @@ rsa
 airtouch5py
 websocket-client
 pillow
+cryptography
 # tools/brands_test.py also needs: websockets

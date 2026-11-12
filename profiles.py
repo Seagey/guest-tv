@@ -15,6 +15,8 @@ settings.json:
 """
 import json, os, re, socket, threading, time
 
+import tvctl
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 STREAMING = {"com.netflix.ninja", "com.amazon.amazonvideo.livingroom", "com.disney.disneyplus", "au.com.stan.and",
              "com.google.android.youtube.tv", "au.com.ninenow.ctv", "au.com.streamotion.ares", "com.cbs.ca",
@@ -84,6 +86,7 @@ class Watcher(threading.Thread):
 
     def age(self, pkg):
         """Seconds since the app's process started (a cold start is young)."""
+        tvctl.check_package(pkg)
         out = self.sh(f"pid=$(pidof {pkg}); [ -n \"$pid\" ] && ps -o ETIME= -p ${{pid%% *}}", 8).strip()
         parts = [int(x) for x in re.split(r"[:-]", out) if x.isdigit()] if out else []
         if not parts:
@@ -94,6 +97,7 @@ class Watcher(threading.Thread):
         return secs
 
     def playing(self, pkg):
+        tvctl.check_package(pkg)
         out = self.sh("dumpsys media_session | grep -A12 'package=" + pkg + "' | grep -m1 'state=PlaybackState'", 8)
         return "state=3" in out   # 3 = PLAYING
 

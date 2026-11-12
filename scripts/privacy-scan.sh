@@ -2,6 +2,7 @@
 # Privacy scan. Run it before every commit and before you publish a fork.
 #
 #   scripts/privacy-scan.sh [denylist-file] [--no-history]
+#   (and optionally <denylist-file>.allow next to it: exact text a line may carry on purpose)
 #
 # Checks, in order:
 #   1. gitleaks on the working tree and on the git history (secrets, keys, tokens)
@@ -108,13 +109,18 @@ echo "== 4. your denylist"
 if [ -n "$DENYLIST" ]; then
   if [ -f "$DENYLIST" ]; then
     # -a reads binary files as text too, so strings inside images and archives are caught.
+    # An optional "<denylist>.allow" file (kept outside the repo, next to the denylist) lists exact text a
+    # line may carry on purpose, such as your own public website address; lines holding it are skipped.
+    DENY_OK="$DENYLIST.allow"
+    # LC_ALL=C: byte by byte, so a line from a binary file (a font's glyph names) is matched too.
+    allowed() { if [ -f "$DENY_OK" ]; then LC_ALL=C grep -aviF -f "$DENY_OK"; else cat; fi; }
     # Pass 1, whole words.
-    words=$(grep -rIaniwF "${EXCL[@]}" --exclude=privacy-scan.sh -f "$DENYLIST" . 2> /dev/null | cut -d: -f1,2 | sort -u)
+    words=$(grep -rIaniwF "${EXCL[@]}" --exclude=privacy-scan.sh -f "$DENYLIST" . 2> /dev/null | allowed | cut -d: -f1,2 | sort -u)
     if [ -n "$words" ]; then
       while IFS= read -r h; do note "denylist  $h"; done <<< "$words"
     fi
     # Pass 2, the same words inside longer words, on lines pass 1 did not already report.
-    parts=$(grep -rIaniF "${EXCL[@]}" --exclude=privacy-scan.sh -f "$DENYLIST" . 2> /dev/null | cut -d: -f1,2 | sort -u)
+    parts=$(grep -rIaniF "${EXCL[@]}" --exclude=privacy-scan.sh -f "$DENYLIST" . 2> /dev/null | allowed | cut -d: -f1,2 | sort -u)
     if [ -n "$parts" ]; then
       while IFS= read -r h; do
         if [ -z "$words" ] || ! grep -qxF "$h" <<< "$words"; then note "denylist-inside-a-word  $h"; fi
@@ -127,15 +133,17 @@ if [ -n "$DENYLIST" ]; then
     fi
     # git history: commit messages, author names and emails, and every tracked file's content
     if [ "$HAS_GIT" = 1 ]; then
-      if git log --all --format='%an %ae %cn %ce %s%n%b' | grep -qiF -f "$DENYLIST"; then
+      # The allow file applies here too (a public account name in the author line, say); the
+      # subject and body are on their own lines, so allowing the author never hides them.
+      if git log --all --format='%an %ae%n%cn %ce%n%s%n%b' | allowed | grep -qiF -f "$DENYLIST"; then
         note "denylist  git commit metadata (author, email or message)"
       fi
       for c in $(git rev-list --all); do
-        if git grep -aiqF -f "$DENYLIST" "$c" -- . ':!scripts/privacy-scan.sh' 2> /dev/null; then
+        if git grep -aiF -f "$DENYLIST" "$c" -- . ':!scripts/privacy-scan.sh' 2> /dev/null | allowed | grep -q .; then
           note "denylist  git history, commit ${c:0:8}"
         fi
       done
-      if [ -f "$TMP/history.txt" ] && grep -aqiF -f "$DENYLIST" "$TMP/history.txt"; then
+      if [ -f "$TMP/history.txt" ] && grep -aiF -f "$DENYLIST" "$TMP/history.txt" | allowed | grep -q .; then
         note "denylist  git history, a line added or removed in some commit (git log -p)"
       fi
     fi

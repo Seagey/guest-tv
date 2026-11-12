@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ground">#FF14161D</color>
+    <string name="fire_watch_desc">Brings the Guest TV welcome screen back when the Home button opens the TV\'s own home. It sees which app came forward and reads nothing else.</string>
+    <style name="Guest" parent="android:Theme.DeviceDefault.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/ground</item>
+        <item name="android:colorBackground">@color/ground</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

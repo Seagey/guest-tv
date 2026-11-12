@@ -1,0 +1,16 @@
+// Guest TV build settings shared by everyone. Your own signing settings go in Signing.mine.xcconfig
+// (copy Signing.example.xcconfig; git ignores the copy). Never put a team id here.
+PRODUCT_BUNDLE_IDENTIFIER = dev.guesttv.appletv
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Automatic
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 1
+
+// Where Guest TV finds the house computer and which home it shows. tools/tv_app.py writes the real
+// values into build/tvos/Home.xcconfig (git ignored), read below; the app's Info.plist picks them up.
+GUESTTV_SCHEME = http
+GUESTTV_HOST =
+GUESTTV_HOME = guest
+
+#include? "../../../build/tvos/Home.xcconfig"
+#include? "Signing.mine.xcconfig"

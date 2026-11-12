@@ -1,0 +1,367 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04B05D9A31FDFBA737CD2F36 = {
+			isa = PBXBuildFile;
+			fileRef = 889D1384FB171745A162E1BF;
+		};
+		0AF38B637844CC3D724C25F1 = {
+			isa = PBXBuildFile;
+			fileRef = 0F40DAB8A7DF93BB21F3175A;
+		};
+		1416E707E88C7580DA04AD3C = {
+			isa = PBXBuildFile;
+			fileRef = 1D4A13C4BCD2325A3351AA68;
+		};
+		296C54BB1275AF63745C85E6 = {
+			isa = PBXBuildFile;
+			fileRef = F237DB9FDDA697330FB7D441;
+		};
+		38D9223E9167EED7D44D9B3F = {
+			isa = PBXBuildFile;
+			fileRef = 6B1B401DA34DC0E98C42C5BA;
+		};
+		73C22FC48E2F067EEB3A1EC7 = {
+			isa = PBXBuildFile;
+			fileRef = ED142E8619625B589AB038F6;
+		};
+		8D7939049750C4DDB3D4CEB0 = {
+			isa = PBXBuildFile;
+			fileRef = 41F537AF91C1091994F2B642;
+		};
+		C81677BCEDAF652E2D77858C = {
+			isa = PBXBuildFile;
+			fileRef = F9BBFECE17083CDAFC36589B;
+		};
+		CA8750C2E21F6EF7F93A9515 = {
+			isa = PBXBuildFile;
+			fileRef = A79687547D19760B35F38463;
+		};
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0F40DAB8A7DF93BB21F3175A = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "CouchInter-Medium.ttf";
+			sourceTree = "<group>";
+		};
+		1D4A13C4BCD2325A3351AA68 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Welcome.swift;
+			sourceTree = "<group>";
+		};
+		41F537AF91C1091994F2B642 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "CouchInter-Regular.ttf";
+			sourceTree = "<group>";
+		};
+		56B3219B94772966EE1BB57C = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.xml;
+			path = Info.plist;
+			sourceTree = "<group>";
+		};
+		6B1B401DA34DC0E98C42C5BA = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "CouchAntonio-Light.ttf";
+			sourceTree = "<group>";
+		};
+		889D1384FB171745A162E1BF = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Style.swift;
+			sourceTree = "<group>";
+		};
+		96E0726575A16666AD740898 = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			includeInIndex = 0;
+			path = GuestTV.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		A79687547D19760B35F38463 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			path = "CouchInter-SemiBold.ttf";
+			sourceTree = "<group>";
+		};
+		A8BB5BB73B521E1E1D2908A3 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = Config/Signing.example.xcconfig;
+			name = Signing.example.xcconfig;
+			sourceTree = "<group>";
+		};
+		DEB0D78CEBB4F6D832A89FF2 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = Config/Base.xcconfig;
+			name = Base.xcconfig;
+			sourceTree = "<group>";
+		};
+		ED142E8619625B589AB038F6 = {
+			isa = PBXFileReference;
+			lastKnownFileType = folder.assetcatalog;
+			path = Assets.xcassets;
+			sourceTree = "<group>";
+		};
+		F237DB9FDDA697330FB7D441 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = WelcomeView.swift;
+			sourceTree = "<group>";
+		};
+		F9BBFECE17083CDAFC36589B = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = GuestTVApp.swift;
+			sourceTree = "<group>";
+		};
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D460D267525DE114CC28D596 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1B7E5B4F61B82C44044BEF97 = {
+			isa = PBXGroup;
+			children = (
+				D8CAAE966262DF7FED02BB62,
+				2BCF0F3D201EA0596556AA88,
+				3AA0BE01506DD50263BA761F,
+			);
+			sourceTree = "<group>";
+		};
+		20394D31FEE1753EA4812D2D = {
+			isa = PBXGroup;
+			children = (
+				6B1B401DA34DC0E98C42C5BA,
+				0F40DAB8A7DF93BB21F3175A,
+				41F537AF91C1091994F2B642,
+				A79687547D19760B35F38463,
+			);
+			sourceTree = "<group>";
+			path = Fonts;
+		};
+		2BCF0F3D201EA0596556AA88 = {
+			isa = PBXGroup;
+			children = (
+				DEB0D78CEBB4F6D832A89FF2,
+				A8BB5BB73B521E1E1D2908A3,
+			);
+			sourceTree = "<group>";
+			name = Config;
+		};
+		3AA0BE01506DD50263BA761F = {
+			isa = PBXGroup;
+			children = (
+				96E0726575A16666AD740898,
+			);
+			sourceTree = "<group>";
+			name = Products;
+		};
+		D8CAAE966262DF7FED02BB62 = {
+			isa = PBXGroup;
+			children = (
+				F9BBFECE17083CDAFC36589B,
+				889D1384FB171745A162E1BF,
+				1D4A13C4BCD2325A3351AA68,
+				F237DB9FDDA697330FB7D441,
+				56B3219B94772966EE1BB57C,
+				ED142E8619625B589AB038F6,
+				20394D31FEE1753EA4812D2D,
+			);
+			sourceTree = "<group>";
+			path = GuestTV;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		41D566B404109501289C18E7 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0C7865821F89BA4887ECB00;
+			buildPhases = (
+				46D11C73F389E6F7F0AED9C6,
+				D460D267525DE114CC28D596,
+				E5FD6FED6F72BF362A34B669,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GuestTV;
+			productName = GuestTV;
+			productReference = 96E0726575A16666AD740898;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		76C782AD816FBD6246E5ED97 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+			};
+			buildConfigurationList = 151031C2C0ABEA9168BC103E;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1B7E5B4F61B82C44044BEF97;
+			productRefGroup = 3AA0BE01506DD50263BA761F;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				41D566B404109501289C18E7,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E5FD6FED6F72BF362A34B669 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				73C22FC48E2F067EEB3A1EC7,
+				38D9223E9167EED7D44D9B3F,
+				0AF38B637844CC3D724C25F1,
+				8D7939049750C4DDB3D4CEB0,
+				CA8750C2E21F6EF7F93A9515,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		46D11C73F389E6F7F0AED9C6 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C81677BCEDAF652E2D77858C,
+				04B05D9A31FDFBA737CD2F36,
+				1416E707E88C7580DA04AD3C,
+				296C54BB1275AF63745C85E6,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		24377620A8CE6D1EB3E29E82 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = GuestTV/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				PRODUCT_NAME = GuestTV;
+				TARGETED_DEVICE_FAMILY = 3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+			};
+			name = Debug;
+		};
+		80DE9EE4F31CFA479E9425B4 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				SDKROOT = appletvos;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+				SWIFT_VERSION = 5.0;
+				SWIFT_COMPILATION_MODE = singlefile;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ONLY_ACTIVE_ARCH = YES;
+				ENABLE_TESTABILITY = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				GCC_OPTIMIZATION_LEVEL = 0;
+			};
+			name = Debug;
+			baseConfigurationReference = DEB0D78CEBB4F6D832A89FF2;
+		};
+		BE6D7CCAC895A32ED0BC093A = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				SDKROOT = appletvos;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+				SWIFT_VERSION = 5.0;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+			baseConfigurationReference = DEB0D78CEBB4F6D832A89FF2;
+		};
+		F42A3FFEB961391F3DF8AB75 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = GuestTV/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				PRODUCT_NAME = GuestTV;
+				TARGETED_DEVICE_FAMILY = 3;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		151031C2C0ABEA9168BC103E = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				80DE9EE4F31CFA479E9425B4,
+				BE6D7CCAC895A32ED0BC093A,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0C7865821F89BA4887ECB00 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				24377620A8CE6D1EB3E29E82,
+				F42A3FFEB961391F3DF8AB75,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 76C782AD816FBD6246E5ED97;
+}

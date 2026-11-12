@@ -650,6 +650,17 @@
     if (k === "left" || k === "right" || k === "up" || k === "down" || k === "ok" || k === "back") onKey(k);
   });
 
+  // Fire TV on Vega OS (&keys=1 from guest-tv's Vega app): nothing can press keys on the stick from
+  // outside, so the page asks the computer for the Guest remote's keys and presses them on itself.
+  if (QS.keys) (function poll(after) {
+    fetch("/api/tv/keys?home=" + encodeURIComponent(HOME) + "&after=" + after).then(function (r) { return r.json(); }).then(function (r) {
+      (r.keys || []).forEach(function (k) {
+        if (k === "left" || k === "right" || k === "up" || k === "down" || k === "ok" || k === "back") onKey(k);
+      });
+      setTimeout(function () { poll(typeof r.n === "number" ? r.n : after); }, 50);
+    }, function () { setTimeout(function () { poll(after); }, 3000); });
+  })(0);
+
   // a mouse or a touch screen works too (handy for the preview)
   document.addEventListener("mousemove", function () { document.body.classList.add("mouse"); });
   document.addEventListener("click", function (e) {

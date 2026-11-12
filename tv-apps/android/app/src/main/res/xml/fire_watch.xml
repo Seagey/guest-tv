@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Window changes only: no content reading, no input, no feedback. canRetrieveWindowContent is
+     declared only because some TVs (a TCL on Android 12) deliver window events only to services
+     with it; the code reads nothing but the event's package and class names. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="0"
+    android:description="@string/fire_watch_desc" />

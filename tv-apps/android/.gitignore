@@ -1,0 +1,11 @@
+# Build output and local machine files: never committed.
+build/
+app/build/
+.gradle/
+.kotlin/
+local.properties
+*.apk
+*.aab
+*.idsig
+.idea/
+*.iml

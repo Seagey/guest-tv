@@ -1,5 +1,9 @@
-"""TV control for Samsung (Tizen) and LG (webOS) TVs: the same calls as tvctl.TV, so the Guest remote
-and the guest agent work unchanged. Set "tv_kind": "samsung" or "lg" next to the TV's address.
+"""TV control for every TV that is not Google TV, Android TV or Fire OS: the same calls as tvctl.TV,
+so the Guest remote and the guest agent work unchanged. Set "tv_kind" next to the TV's address.
+
+Samsung and LG live in this file. The others each have their own file (KINDS below), built on _Base
+here, so each driver is self contained: tv_roku.py, tv_vidaa.py, tv_philips.py (Titan OS and Saphi),
+tv_panasonic.py, tv_vizio.py, tv_appletv.py and tv_vega.py.
 
 Cut down from couch-tv's bridge/samsung.py and bridge/lg.py (github.com/Seagey/couch-tv) to what
 guest-tv uses. Everything is on the home Wi-Fi:
@@ -16,7 +20,7 @@ nothing a guest types reaches the TV, except a show title turned into a Netflix 
 What these TVs cannot do here: the Guest profile picker (no way to read the screen), Spotify search
 (Spotify just opens), screenshots.
 """
-import base64, json, os, re, socket, ssl, threading, time, urllib.error, urllib.parse, urllib.request
+import base64, importlib, json, os, re, socket, ssl, threading, time, urllib.error, urllib.parse, urllib.request
 
 import tvctl
 
@@ -59,8 +63,37 @@ LG_PERMISSIONS = [
 DEVMODE_APP = "com.palmdts.devmode"
 
 
+# Every "tv_kind" besides "android" (Google TV, Android TV and Fire OS, over ADB in tvctl.TV):
+# kind -> (module, class). "titan" and "saphi" are both Philips (tv_philips.py).
+KINDS = {
+    "samsung": ("tvbrands", "SamsungTV"),
+    "lg": ("tvbrands", "LGTV"),
+    "roku": ("tv_roku", "RokuTV"),
+    "vidaa": ("tv_vidaa", "VidaaTV"),
+    "titan": ("tv_philips", "PhilipsTV"),
+    "saphi": ("tv_philips", "PhilipsTV"),
+    "panasonic": ("tv_panasonic", "PanasonicTV"),
+    "vizio": ("tv_vizio", "VizioTV"),
+    "appletv": ("tv_appletv", "AppleTV"),
+    "vega": ("tv_vega", "VegaTV"),
+}
+
+
+def make(kind, ip):
+    """The driver for one TV. A class with TAKES_KIND = True is given the kind as well (Philips)."""
+    mod, cls = KINDS[kind]
+    c = getattr(importlib.import_module(mod), cls)
+    return c(ip, kind) if getattr(c, "TAKES_KIND", False) else c(ip)
+
+
 class TVUnavailable(RuntimeError):
     """The TV did not answer, or nobody has pressed Allow on it yet."""
+
+
+def _scrub(text):
+    """Error text from LG's tools can carry the Developer Mode session token: keep long tokens out of
+    what is written down (couch-tv#66)."""
+    return re.sub(r"[A-Za-z0-9+/=_-]{24,}", "<hidden>", text or "")
 
 
 def netflix_id(link):
@@ -106,8 +139,18 @@ def _http(method, url, body=None, headers=None, timeout=4):
 
 
 class _Base:
+    """What every driver has. The Guest remote and the agent call installed, key, open_app, open_link,
+    spotify and playing (as on tvctl.TV); the hook (watch below) calls is_on, front, is_guest, nothing
+    and open_guest_app. A driver fills in the TV side: is_on, front, app_ids, launch, button, volume,
+    mute, open_link and open_guest_app."""
     kind = ""
     can_profiles = False
+    can_open = True       # False: guest-tv's welcome screen cannot open on this TV (the hook does not run)
+    sees_front = True     # False: the TV cannot say what is on screen, so the hook opens guest-tv only
+                          # just after the TV comes on and never checks it opened
+    pairing = "allow"     # "allow" (press Allow on the TV), "pin" (type the PIN the TV shows), or None
+    GONE_IS_OFF = 0       # seconds without an answer before the hook counts an on TV as off (0: at once)
+    SETTLE = 1.5          # seconds the hook lets the TV settle on whatever it opens by itself
 
     def __init__(self, ip):
         self.ip = ip
@@ -115,7 +158,24 @@ class _Base:
         self.ws = None
         self.quiet_until = 0.0   # the watcher leaves the TV alone until then (a guest's command just ran)
         self.found = (0.0, {})   # (when, {app id in tvctl.APPS: the TV's id})
-        self.log = []            # the watcher's last few decisions, for /api/tvs
+        self.log = []            # the watcher's last few decisions, for /api/tv/status
+        self.page = None         # guest-tv's TV page as this TV reaches it, set by server.py:
+                                 # http://<computer>:5410/tv/?tv=<home>&brand=<kind> (never a key in it)
+
+    def guest_id(self):
+        """What front() says while guest-tv is on screen."""
+        return GUEST_APP.get(self.kind)
+
+    def is_guest(self, front):
+        return front is not None and front == self.guest_id()
+
+    def nothing(self, front):
+        """True when nothing of anyone's is on screen (the TV's home, live TV, an input), so the hook may
+        open guest-tv over it."""
+        return front is None
+
+    def open_guest_app(self):
+        raise TVUnavailable("guest-tv's welcome screen cannot open on this TV")
 
     def note(self, what):
         self.log = (self.log + [time.strftime("%H:%M:%S ") + what])[-8:]
@@ -166,6 +226,10 @@ class SamsungTV(_Base):
     KEYS = SAMSUNG_KEYS
     REST, WS, DIAL, UPNP = 8001, 8002, 8080, 9197   # the TV's ports (tools/brands_test.py moves them)
     COLD, BLIND = 8, [8, 3]   # Netflix on a 2021 Frame: profile screen on a cold start; the card, OK opens, OK plays
+    # A Samsung says standby before it leaves the network, so no answer for a while is a Wi-Fi dropout,
+    # not a switch off; only 2 minutes without one counts as off (couch-tv#53).
+    GONE_IS_OFF = 120
+    LAUNCH_TRIES, LAUNCH_GAP = 3, 1.0   # just after power on the REST launch can fail once or twice (couch-tv#42)
 
     def __init__(self, ip, name="guest-tv"):
         super().__init__(ip)
@@ -218,10 +282,20 @@ class SamsungTV(_Base):
         return None
 
     def launch(self, tid):
-        """REST opens apps on every Samsung tried; the remote's ed.apps.launch was ignored by a 2021 Frame."""
-        code, body = self._rest("POST", "applications/" + urllib.parse.quote(tid), timeout=5)
-        if code != 200:
-            raise TVUnavailable("the TV did not open %s (%s)" % (tid, code))
+        """REST opens apps on every Samsung tried; the remote's ed.apps.launch was ignored by a 2021 Frame.
+        Just after power on the first try or two can fail, so it tries up to three times, a second apart
+        (couch-tv#42)."""
+        code = None
+        for n in range(self.LAUNCH_TRIES):
+            try:
+                code, body = self._rest("POST", "applications/" + urllib.parse.quote(tid), timeout=5)
+            except OSError as e:
+                code = type(e).__name__
+            if code == 200:
+                return
+            if n + 1 < self.LAUNCH_TRIES:
+                time.sleep(self.LAUNCH_GAP)
+        raise TVUnavailable("the TV did not open %s (%s)" % (tid, code))
 
     def open_guest_app(self):
         self.launch(GUEST_APP["samsung"])
@@ -344,6 +418,8 @@ class LGTV(_Base):
     KEYS = LG_KEYS
     PORTS = (3000, 3001)   # plain, encrypted (tools/brands_test.py moves them)
 
+    DEVMODE_RETRY = 3600   # a failed Extend is tried again after an hour, not the next day (couch-tv 575fa97)
+
     def __init__(self, ip):
         super().__init__(ip)
         self.key_file = _token_file("lg", ip)
@@ -351,13 +427,28 @@ class LGTV(_Base):
         self.n = 0
         self.points = []
         self.devmode_file = os.path.join(DATA, "lg-%s-devmode.json" % ip.replace(":", "_"))
+        # The port that answered, kept per TV: webOS 10.3.2 resets port 3000 and only answers on 3001,
+        # so after a restart the computer goes straight to the one that worked (couch-tv#71).
+        self.port_file = os.path.join(DATA, "lg-%s-port.key" % ip.replace(":", "_"))
+
+    def nothing(self, front):
+        return front is None or bool(LG_NOTHING.match(front))
+
+    def _urls(self):
+        urls = ["ws://%s:%d" % (self.ip, self.PORTS[0]), "wss://%s:%d" % (self.ip, self.PORTS[1])]
+        seen = _read(self.port_file)
+        first = next((u for u in urls if seen and u.endswith(":" + seen)), None)
+        if first:
+            urls.remove(first)
+            urls.insert(0, first)
+        return urls
 
     def _connect(self, wait=8):
         import websocket
         if self.ws is not None and self.ws.connected:
             return self.ws
         last, ws = None, None
-        for url in ("ws://%s:%d" % (self.ip, self.PORTS[0]), "wss://%s:%d" % (self.ip, self.PORTS[1])):   # newer firmware: encrypted only
+        for url in self._urls():   # plain first, then encrypted (newer firmware), the one that worked last first
             try:
                 socket.create_connection((self.ip, int(url.rsplit(":", 1)[1])), 1.5).close()   # quick: is it there?
             except OSError as e:
@@ -376,6 +467,12 @@ class LGTV(_Base):
             ws.close()
             raise
         self.ws, self.pointer, self.url = ws, None, url
+        port = url.rsplit(":", 1)[1]
+        if _read(self.port_file) != port:
+            try:
+                _keep(self.port_file, port)
+            except OSError:
+                pass
         return ws
 
     def _register(self, ws, wait):
@@ -557,56 +654,105 @@ class LGTV(_Base):
                 self.launch(DEVMODE_APP, params={"extend": True})
                 state["ok"] = True
         except Exception as e:
-            state["error"] = str(e)[:200]
+            state["error"] = _scrub(str(e))[:200]
+        state["at"] = time.time()
         _keep(self.devmode_file, json.dumps(state))
         self.note("Developer Mode extend %s (%s)" % ("done" if state["ok"] else "failed", state.get("how")))
         return state["ok"]
 
     def devmode_due(self):
+        """Once a day, and again an hour after an Extend that failed (couch-tv 575fa97)."""
         try:
-            return json.load(open(self.devmode_file)).get("date") != time.strftime("%Y-%m-%d")
+            st = json.load(open(self.devmode_file))
         except (FileNotFoundError, ValueError):
             return True
+        if st.get("date") != time.strftime("%Y-%m-%d"):
+            return True
+        return not st.get("ok") and time.time() - float(st.get("at") or 0) > self.DEVMODE_RETRY
+
+    def wait_devmode_app(self, timeout=20.0):
+        """After Extend, Developer Mode's own app comes up a few seconds later (about 5 s on webOS 10) and
+        covers the screen. Wait for it, up to timeout, so guest-tv goes back on top of it and not under
+        it (couch-tv#71). Returns True when it appeared."""
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            if self.front() == DEVMODE_APP:
+                time.sleep(0.5)
+                return True
+            time.sleep(0.5)
+        return False
 
 
 def nothing_on_screen(tv, front):
-    if tv.kind == "lg":
-        return front is None or bool(LG_NOTHING.match(front))
-    return front is None
+    return tv.nothing(front)
 
 
 def watch(tv, every=2.0, stop=None):
-    """The hook. Each time the TV comes on and nothing else is on screen, open the guest-tv app, so
-    the TV "looks for" guest-tv every time it is switched on. It leaves the TV alone when an app is on
-    screen, and for 20 seconds after a guest's own command. Runs until stop is set."""
-    was_on = None
+    """The hook. Each time the TV comes on and nothing else is on screen, open guest-tv, so the TV
+    "looks for" guest-tv every time it is switched on. It leaves the TV alone when an app is on
+    screen, and for 20 seconds after a guest's own command. Runs until stop is set.
+
+    From couch-tv's Samsung fixes: only is_on() is read on the timer (front() only as the TV comes
+    on, couch-tv#53); a TV with GONE_IS_OFF counts as off only after that long without an answer, so
+    a short Wi-Fi dropout is not a switch on (#53); the quiet time is checked again after the settle
+    (#53); and "opened guest-tv" is logged only once it is seen on screen (#42)."""
+    was_on, answered, told = None, time.monotonic(), False
     while not (stop and stop.is_set()):
+        if not tv.can_open:   # VIZIO, or a Titan with no Guest TV app yet: look again now and then
+            if not told:
+                tv.note("this TV cannot show guest-tv's welcome screen, so nothing is opened (Guest remote only)")
+                told = True
+            (stop.wait if stop else time.sleep)(30 * every)
+            continue
         try:
             on = tv.is_on()
+            if on is not None:
+                answered = time.monotonic()
+            elif was_on and tv.GONE_IS_OFF and time.monotonic() - answered < tv.GONE_IS_OFF:
+                on = True   # no answer for a moment: a Wi-Fi dropout, not a switch off
             if on and was_on is not True:
-                time.sleep(1.5)   # let the TV settle on whatever it opens by itself
-                front = tv.front()
+                time.sleep(tv.SETTLE)   # let the TV settle on whatever it opens by itself
+                front = tv.front() if tv.sees_front else None
                 if time.monotonic() < tv.quiet_until:
                     tv.note("TV came on, left alone (a guest command is running)")
-                elif front == GUEST_APP[tv.kind]:
+                elif tv.is_guest(front):
                     tv.note("TV came on, guest-tv already open")
-                elif not nothing_on_screen(tv, front):
+                elif not tv.nothing(front):
                     tv.note("TV came on in %s, left alone" % front)
                 else:
                     if tv.kind == "lg" and tv.devmode_due():
-                        tv.extend_devmode()
-                        time.sleep(2)
+                        if tv.extend_devmode():
+                            tv.wait_devmode_app()
+                        else:
+                            time.sleep(2)
                     tv.open_guest_app()
-                    tv.note("TV came on, opened guest-tv")
+                    tv.note(_opened(tv))
             elif on and tv.kind == "lg" and tv.devmode_due() and time.monotonic() >= tv.quiet_until:
                 front = tv.front()   # a TV left on for days: extend while guest-tv or live TV is up
-                if front == GUEST_APP["lg"] or nothing_on_screen(tv, front):
-                    tv.extend_devmode()
-                    time.sleep(2)
-                    if front == GUEST_APP["lg"]:
+                if tv.is_guest(front) or tv.nothing(front):
+                    if tv.extend_devmode():
+                        tv.wait_devmode_app()
+                    else:
+                        time.sleep(2)
+                    if tv.is_guest(front):
                         tv.open_guest_app()
             was_on = bool(on)   # no answer counts as off
         except Exception as e:
             tv.note("watch: %s %s" % (type(e).__name__, str(e)[:80]))
             was_on = False if was_on is None else was_on
         time.sleep(every)
+
+
+def _opened(tv, wait=6.0):
+    """After the hook asked the TV to open guest-tv: say so only once it is seen on screen."""
+    if not tv.sees_front:
+        return "TV came on, asked it to open guest-tv (this TV cannot say what is on screen)"
+    end = time.monotonic() + wait
+    while time.monotonic() < end:
+        try:
+            if tv.is_guest(tv.front()):
+                return "TV came on, opened guest-tv"
+        except Exception:
+            pass
+        time.sleep(0.5)
+    return "TV came on, asked it to open guest-tv, not seen on screen yet"
