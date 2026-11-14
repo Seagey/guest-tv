@@ -1,0 +1,19 @@
+# guest-tv, hosted: the welcome screen on the internet, with no computer in the house.
+# Base directory: hosted/. The build copies ../web into dist/ and writes the homes the function serves.
+[build]
+  command = "node build.mjs"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+# /rathescar-grove opens that home's TV screen
+[[redirects]]
+  from = "/"
+  to = "/tv/"
+  status = 302
+
+[[headers]]
+  for = "/tv/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"

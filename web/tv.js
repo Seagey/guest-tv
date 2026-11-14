@@ -56,6 +56,7 @@
     pool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 16c1.6 0 1.6-1.2 3.2-1.2s1.6 1.2 3.2 1.2 1.6-1.2 3.1-1.2 1.6 1.2 3.2 1.2 1.6-1.2 3.2-1.2 1.6 1.2 3.1 1.2"/><path d="M2.5 20c1.6 0 1.6-1.2 3.2-1.2s1.6 1.2 3.2 1.2 1.6-1.2 3.1-1.2 1.6 1.2 3.2 1.2 1.6-1.2 3.2-1.2 1.6 1.2 3.1 1.2"/><path d="M8 13V5.5a2 2 0 0 1 4 0M16 13V5.5a2 2 0 0 0-4 0M8 8.5h8"/></svg>',
     music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
     light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg>',
     notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'
   };
   function wx(code, day) {
@@ -138,7 +139,7 @@
       sub = st.to ? "Here until " + DAYS[d8(st.to).getDay()] + ". Make yourself at home." : "Make yourself at home.";
     } else if (st.phase === "open") {
       eyebrow = S.kind || (S.brand && S.brand.name) || "";
-      h1 = "Welcome to " + S.name;
+      h1 = guest ? "Welcome, " + guest : "Welcome to " + S.name;
       sub = "Make yourself at home." + (S.checkout_time ? " Check-out is by " + t12(S.checkout_time) + "." : "");
     } else if (st.phase === "between" || st.phase === "before") {
       eyebrow = S.kind;
@@ -282,6 +283,7 @@
       out = places ? [stayCard, wifiCard, climateCard, localCard] : [stayCard, wifiCard, climateCard];
       pills.push({ id: "checkout", name: "Check-out", icon: I.checkout, note: DAYS[d8(st.to).getDay()].slice(0, 3) + " " + t12(S.checkout_time) });
     }
+    if (S.video && S.video.url) pills.push({ id: "video", name: "Welcome video", icon: I.play, note: "" });
     PILLS = pills;
     return out;
   }
@@ -360,6 +362,7 @@
   }
   function launch(a) {
     if (!a) return;
+    if (a.sheet === "video") { playVideo(true); return; }
     if (a.sheet) { openSheet(a.sheet); return; }
     if (TVOS && TVOS.launch && a.pkg) { TVOS.launch(a.pkg); return; }
     if (BRAND && a.app) {
@@ -654,9 +657,10 @@
     return was;
   }
   // the couch-tv TV app keeps BACK for itself and calls tv.back() instead
-  window.tv = { back: function () { if (awake()) return; if (sheet) closeSheet(); } };
+  window.tv = { back: function () { if (VID) { stopVideo(); return; } if (awake()) return; if (sheet) closeSheet(); } };
   function onKey(k) {
     document.body.classList.remove("mouse");
+    if (VID) { videoKey(k); return; }
     if (awake()) return;   // the first press only wakes the screen
     if (sheet) sheetKey(k);
     else if (k !== "back") homeKey(k);
@@ -678,6 +682,7 @@
   document.addEventListener("click", function (e) {
     var t = e.target.closest ? e.target : null;
     if (!t) return;
+    if (VID) { videoKey("ok"); return; }
     var card = t.closest("[data-i]"), app = t.closest("[data-a]"), nav = t.closest("[data-n]"), zone = t.closest("[data-z]");
     if (sheet && !t.closest(".sheet-in")) { closeSheet(); return; }
     if (card && !sheet) { area = "cards"; idx = +card.getAttribute("data-i"); paintFocus(); openSheet(CARDS[idx].id); }
@@ -690,17 +695,79 @@
     if (sheet && sheet.id === "climate") { e.preventDefault(); sheetKey(e.deltaY < 0 ? "up" : "down"); }
   }, { passive: false });
 
+  // ---------------------------------------------------------------- welcome video
+  // S.video = {url, id, sound, every}: the host's default video for this home, or one made for this
+  // guest. It plays full screen over the home. OK or Back closes it. "every" says when it starts by
+  // itself: "day" (once a day on this TV), "always" (each time the page loads) or "never".
+  var VID = null;   // {el, box, quiet}: quiet when the TV would not start it with sound
+  function videoSeen(set) {
+    var key = "guest-tv-video", val = S.video.id + "|" + isoToday();
+    try {
+      if (set) localStorage.setItem(key, val);
+      return localStorage.getItem(key) === val;
+    } catch (e) { return false; }
+  }
+  function playVideo(asked) {
+    if (VID || !S || !S.video || !S.video.url) return;
+    var box = document.createElement("div"); box.className = "vid";
+    var v = document.createElement("video");
+    v.src = S.video.url; v.setAttribute("playsinline", ""); v.preload = "auto";
+    var hint = document.createElement("p"); hint.className = "vid-hint";
+    box.appendChild(v); box.appendChild(hint);
+    document.body.appendChild(box);
+    VID = { el: v, box: box, quiet: false };
+    var say = function () { hint.innerHTML = VID && VID.quiet ? "<b>OK</b> sound on &nbsp; <b>Back</b> close" : "<b>OK</b> or <b>Back</b> to close"; };
+    v.muted = S.video.sound === false;
+    v.onended = stopVideo;
+    v.onerror = function () { stopVideo(); if (asked) toast("The video did not play"); };
+    say();
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {
+      if (!VID || VID.el !== v) return;
+      // most TV browsers refuse sound until a button is pressed: start it silent and say how to hear it
+      VID.quiet = S.video.sound !== false; v.muted = true; say();
+      var q = v.play();
+      if (q && q.catch) q.catch(function () { stopVideo(); if (asked) toast("The video did not play"); });
+    });
+    videoSeen(true);
+    clearTimeout(restT); document.body.classList.remove("rest");
+    setTimeout(function () { if (box.parentNode) box.classList.add("on"); }, 30);
+  }
+  function stopVideo() {
+    if (!VID) return;
+    var v = VID.el, box = VID.box;
+    VID = null;
+    try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) {}
+    if (box.parentNode) box.parentNode.removeChild(box);
+    awake();
+  }
+  function videoKey(k) {
+    if (k === "ok" && VID.quiet) {
+      VID.quiet = false; VID.el.muted = false;
+      VID.box.querySelector(".vid-hint").innerHTML = "<b>OK</b> or <b>Back</b> to close";
+      return;
+    }
+    if (k === "ok" || k === "back") stopVideo();
+  }
+  function autoVideo() {
+    if (!S.video || !S.video.url || QS.video === "0") return;
+    var every = S.video.every || "day";
+    if (QS.video === "1" || every === "always" || (every === "day" && !videoSeen())) playVideo(false);
+  }
+
   // ---------------------------------------------------------------- data
   function refreshState() {
     if (BRAND) api("tv/apps").then(function (r) { BRAND_APPS = r.apps || []; if (S && !sheet) drawApps(); }, function () {});
     return api("state").then(function (s) {
       if (s.error) { $("welcome").textContent = s.error; return; }
       var first = !S || S.id !== s.id;
+      var newVideo = s.video && s.video.id !== (S && S.video && S.video.id);
       S = s; HOME = s.id;
       if (first) buildScene();
       header();
       if (!sheet) drawCards();
       drawApps();
+      if (newVideo && !sheet) autoVideo();
     });
   }
   function refreshWeather() {
