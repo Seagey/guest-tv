@@ -9,7 +9,8 @@
     "property": "0ca3f497-1c99-4306-a4b7-1488495c9214"
   },
   "photos": {
-    "hero": "sos-hero"
+    "hero": "howards-way-own-hero",
+    "inside": "howards-way-own-inside"
   },
   "scene": {
     "clockTop": 9,
