@@ -27,6 +27,15 @@ same questions `setup.py` asks, one at a time, in plain words (or let them run `
 Before you finish, say the must-haves out loud: everything on one Wi-Fi, the computer never sleeps,
 Claude Code stays signed in.
 
+## SOS Stays content (sanity_sync.py)
+
+- Property content is edited in the Concierge Sanity Studio, never in `guide.json`. `guide.json` only
+  holds what Sanity has no field for (welcome, check-out steps, the emergency number).
+- After any change to `sanity_sync.py`, run `tools/sanity_test.py` (no network, a second).
+- The fetch is read only and uses no token. Never add a Sanity write token to this repo or this computer.
+- The TV's address goes in `data/private.json` (`"tv"`), not in `data/settings.json`: the repo is public.
+- Sanity text reaches the guest agent as house facts, the same as `guide.json` did. It still gets no tools.
+
 ## Ask the owner, never do it yourself
 
 - **Signing in** to streaming apps, Wi-Fi or any account. If an app offers saved sign-ins (Google's

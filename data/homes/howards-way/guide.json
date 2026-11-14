@@ -1,0 +1,16 @@
+{
+  "welcome": "Welcome to Howard's Way. Sós is the Irish word for a break, so settle in and take one. Everything for your stay is on this screen, and the SOS Stays team is a message away.",
+  "rules": [],
+  "howto": [],
+  "local": [],
+  "checkout": {
+    "time": "11:00",
+    "steps": []
+  },
+  "emergency": [
+    {
+      "name": "Emergency services (Garda, ambulance, fire)",
+      "phone": "112 or 999"
+    }
+  ]
+}

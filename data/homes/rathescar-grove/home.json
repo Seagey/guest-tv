@@ -1,0 +1,30 @@
+{
+  "id": "rathescar-grove",
+  "mode": "stay",
+  "stay_open": true,
+  "name": "Rathescar Grove",
+  "kind": "Guest house in the Boyne Valley",
+  "host": "SOS Stays",
+  "sanity": {
+    "property": "fe54286a-ad4b-493c-b178-e69553641db5"
+  },
+  "photos": {
+    "hero": "sos-hero"
+  },
+  "scene": {
+    "clockTop": 9,
+    "clockSize": 22,
+    "fg": false
+  },
+  "checkin": "15:00",
+  "checkout": "11:30",
+  "weather": {
+    "place": "Dunleer",
+    "lat": 53.8306,
+    "lon": -6.3944,
+    "tz": "Europe/Dublin"
+  },
+  "climate": {
+    "zones": []
+  }
+}

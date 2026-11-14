@@ -1,11 +1,21 @@
 {
   "port": 5410,
-  "default_home": "lake",
+  "default_home": "rathescar-grove",
+  "brand": {
+    "name": "SOS Stays",
+    "logo": "brand/sos-stays-logo-light.png"
+  },
+  "sanity": {
+    "project": "4xk58dqh",
+    "dataset": "production",
+    "every_min": 10
+  },
+  "tv_kind": "lg",
   "weather": {
-    "place": "Byron Bay",
-    "lat": -28.6474,
-    "lon": 153.602,
-    "tz": "Australia/Sydney"
+    "place": "Dunleer",
+    "lat": 53.8306,
+    "lon": -6.3944,
+    "tz": "Europe/Dublin"
   },
   "aircon": {},
   "profiles": {

@@ -6,7 +6,7 @@
         id="https://github.com/Seagey/guest-tv/samsung" version="1.0.0" viewmodes="maximized">
   <tizen:application id="GuestTVApp.Home" package="GuestTVApp" required_version="2.3"/>
   <content src="boot.html"/>
-  <name>Guest TV</name>
+  <name>SOS Stays</name>
   <icon src="icon.png"/>
   <access origin="*" subdomains="true"/>
   <tizen:privilege name="http://tizen.org/privilege/internet"/>

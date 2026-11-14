@@ -142,6 +142,7 @@ def tv_for(ip, kind=None):
     if k not in _tvs:
         if kind in ("samsung", "lg"):
             import tvbrands
+            ip = ip or ""   # no address set yet: every call then says the TV did not answer, instead of crashing here
             _tvs[k] = tvbrands.SamsungTV(ip) if kind == "samsung" else tvbrands.LGTV(ip)
         else:
             _tvs[k] = TV(ip)

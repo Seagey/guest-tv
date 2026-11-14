@@ -8,6 +8,53 @@ Built with Claude.
 
 ![The TV and the Guest remote](docs/screens/hero.jpg)
 
+## SOS Stays: this fork
+
+This is SOS Stays' copy of guest-tv. What is different from the original:
+
+- **The look.** The SOS Stays logo (`web/brand/`), the logo's green, cream text and the Concierge's
+  Playfair Display headings, on the TV, the phone pages and the LG app's icon and wait screen.
+- **The content comes from the Concierge's Sanity** (project "Concierge", the same one
+  [sosstays/concierge](https://github.com/sosstays/concierge) reads). Edit a property in the
+  Concierge Studio and the TV follows within 10 minutes: Wi-Fi, address, check-in notes, house
+  rules, FAQs, places to eat, things to do and travel, and the WhatsApp number. Nothing is typed
+  twice. See [Content from Sanity](#content-from-sanity).
+- **Three homes** in `data/homes/`: `rathescar-grove`, `howards-way`, `tinnashrule`. Each names its
+  Sanity property. The demo homes (`lake`, `ridge`, `carriage`, `headland`) are still there to try.
+- **No booking feed yet**, so each home has `"stay_open": true`: the welcome, Wi-Fi and guide always
+  show, with no guest name or dates. Add a `calendar_url` (Uplisting or Airbnb calendar export) to a
+  home and take `stay_open` out, and the TV follows each booking as the original does.
+- **Open Wi-Fi** (a Sanity password of "no password") shows as "No password" and the join code works.
+- **No aircon tile** where a home has no aircon. The house guide takes its place.
+
+### Content from Sanity
+
+| Where | What lives there |
+|---|---|
+| Sanity, Concierge project (`property` and its venues) | name, Wi-Fi, address, check-in and check-out, parking, quiet hours, extra notes, FAQs, food, attractions, travel, WhatsApp number |
+| `data/homes/<id>/home.json` | which Sanity property, the photos, the weather place, the TV |
+| `data/homes/<id>/guide.json` | the welcome words, check-out steps, the emergency number (Sanity has no field for these) |
+| `data/private.json` (this computer only) | the TV's address, door codes, the host key |
+
+```bash
+.venv/bin/python sanity_sync.py --list    # the properties in Sanity and their ids
+.venv/bin/python sanity_sync.py           # fetch now and say what changed
+.venv/bin/python tools/sanity_test.py     # the mapping, with no network
+```
+
+`server.py` fetches every 10 minutes (`"sanity": {"every_min": 10}` in `data/settings.json`) and
+keeps the last answer in `data/sanity-cache/`, so the TV keeps its content if the internet drops.
+`/api/sanity` says when it last fetched. A new property: make `data/homes/<id>/` with a `home.json`
+like the others and its Sanity `_id`.
+
+To use a property's own photo instead of the green SOS Stays backdrop, see [Your own photo](#your-own-photo).
+
+### The LG TV
+
+`data/settings.json` already says `"tv_kind": "lg"`. The TV's address stays out of git: on the house
+computer put `"tv": "<the TV's address>"` in `data/private.json`. Then follow
+[Samsung and LG](#samsung-and-lg), the LG part.
+
 ## What guests see
 
 Two layouts, one setup. A **guest room** for friends and family: welcome, Wi-Fi, their room, the
@@ -439,6 +486,7 @@ the TV: the couch-tv TV app (Google TV) or the guest-tv app (Samsung, LG) shows 
 | Path | What it is |
 |---|---|
 | `server.py` | the pages and the API behind them |
+| `sanity_sync.py` | the house guide from the Concierge's Sanity project (SOS Stays) |
 | `guest_agent.py` | the agent behind the Ask box, and the code that checks what it picks |
 | `tvctl.py` | TV control over ADB, from fixed tables of keys and apps |
 | `tvbrands.py` | the same for Samsung and LG, and the hook that opens guest-tv when the TV comes on |

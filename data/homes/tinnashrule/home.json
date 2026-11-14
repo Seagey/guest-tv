@@ -1,0 +1,30 @@
+{
+  "id": "tinnashrule",
+  "mode": "stay",
+  "stay_open": true,
+  "name": "Tinnashrule Farm Lodge",
+  "kind": "Farm lodge near Ferns, Co. Wexford",
+  "host": "SOS Stays",
+  "sanity": {
+    "property": "df458039-2ad0-47c1-bb2c-de855b68346f"
+  },
+  "photos": {
+    "hero": "sos-hero"
+  },
+  "scene": {
+    "clockTop": 9,
+    "clockSize": 22,
+    "fg": false
+  },
+  "checkin": "15:00",
+  "checkout": "11:00",
+  "weather": {
+    "place": "Ferns",
+    "lat": 52.5906,
+    "lon": -6.4958,
+    "tz": "Europe/Dublin"
+  },
+  "climate": {
+    "zones": []
+  }
+}

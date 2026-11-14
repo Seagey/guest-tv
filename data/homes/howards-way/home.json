@@ -1,0 +1,30 @@
+{
+  "id": "howards-way",
+  "mode": "stay",
+  "stay_open": true,
+  "name": "Howard's Way",
+  "kind": "Holiday home in Liscannor, Co. Clare",
+  "host": "SOS Stays",
+  "sanity": {
+    "property": "0ca3f497-1c99-4306-a4b7-1488495c9214"
+  },
+  "photos": {
+    "hero": "sos-hero"
+  },
+  "scene": {
+    "clockTop": 9,
+    "clockSize": 22,
+    "fg": false
+  },
+  "checkin": "15:00",
+  "checkout": "11:00",
+  "weather": {
+    "place": "Liscannor",
+    "lat": 52.9383,
+    "lon": -9.3936,
+    "tz": "Europe/Dublin"
+  },
+  "climate": {
+    "zones": []
+  }
+}

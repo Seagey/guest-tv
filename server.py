@@ -13,7 +13,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 HERE = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(HERE, "web")
 DATA = os.path.join(HERE, "data")
-TZ = dt.timezone(dt.timedelta(hours=11))   # replaced from the weather answer (utc_offset_seconds)
+TZ = dt.timezone(dt.timedelta(hours=11))   # replaced below from settings.json, then from the weather answer (utc_offset_seconds)
 
 
 def jread(p, default=None):
@@ -61,8 +61,12 @@ def load_home(hid):
     if hid not in home_ids():
         return None
     base = jread(os.path.join(DATA, "homes", hid, "home.json"), {})
-    h = merge(base, private().get("homes", {}).get(hid, {}))
-    h["guide"] = jread(os.path.join(DATA, "homes", hid, "guide.json"), {}) or {}
+    guide = jread(os.path.join(DATA, "homes", hid, "guide.json"), {}) or {}
+    if (base.get("sanity") or {}).get("property"):   # the Concierge's content for this property (sanity_sync.py)
+        import sanity_sync
+        base, guide = sanity_sync.overlay(hid, base, guide)
+    h = merge(base, private().get("homes", {}).get(hid, {}))   # what the host typed on this computer still wins
+    h["guide"] = guide
     film = settings().get("film") and jread(os.path.join(DATA, "homes", hid, "film.json"))
     if film:   # film mode: demo host, Wi-Fi and picks over the real ones, so nothing private is on camera
         h = merge(h, {k: v for k, v in film.items() if not k.startswith("_")})
@@ -76,6 +80,20 @@ def now():
 def at(day, hhmm):
     hh, mm = (int(x) for x in (hhmm or "10:00").split(":"))
     return dt.datetime(day.year, day.month, day.day, hh, mm, tzinfo=TZ)
+
+
+def _settings_tz():
+    """The house's own time zone from settings.json ("weather": {"tz": "Europe/Dublin"}), so check-in and
+    check-out times are right from the first second, and stay right when the weather service is down."""
+    try:
+        import zoneinfo
+        return zoneinfo.ZoneInfo((settings().get("weather") or {})["tz"])
+    except Exception:
+        return None
+
+
+TZ = _settings_tz() or TZ
+ZONED = TZ is not None and not isinstance(TZ, dt.timezone)   # a named zone knows its own summer time: keep it
 
 
 # ---------------------------------------------------------------- the stay
@@ -143,7 +161,8 @@ def stay_of(h):
             return {"phase": phase, "guest": s.get("guest", ""), "guests": s.get("guests", 0), "active": phase in ("arrival", "during", "lastday"),
                     "from": s["from"].isoformat(), "to": s["to"].isoformat(), "checkin": cin.isoformat(),
                     "checkout": cout.isoformat(), "nights": nights, "night": night}
-    if h.get("mode") == "guest":
+    if h.get("mode") == "guest" or h.get("stay_open"):
+        # "stay_open": a stay home with no booking feed yet. The Wi-Fi and the guide always show, with no name or dates.
         return {"phase": "open", "guest": "", "active": True}
     return {"phase": "between", "guest": "", "active": False}
 
@@ -186,9 +205,9 @@ def booking_loop():
 wx_cache = {}
 
 
-def weather(days=7):
+def weather(days=7, h=None):
     global TZ
-    w = settings().get("weather") or {"place": "Byron Bay", "lat": -28.6474, "lon": 153.602, "tz": "Australia/Sydney"}
+    w = (h or {}).get("weather") or settings().get("weather") or {"place": "Byron Bay", "lat": -28.6474, "lon": 153.602, "tz": "Australia/Sydney"}
     key = (w["lat"], w["lon"])
     c = wx_cache.get(key)
     if c and time.time() - c[0] < 1800:
@@ -201,7 +220,8 @@ def weather(days=7):
         d = json.loads(urllib.request.urlopen("https://api.open-meteo.com/v1/forecast?" + q, timeout=10).read())
     except Exception:
         return c[1] if c else {"place": w["place"], "ok": False}
-    TZ = dt.timezone(dt.timedelta(seconds=d.get("utc_offset_seconds", 39600)))
+    if not ZONED:
+        TZ = dt.timezone(dt.timedelta(seconds=d.get("utc_offset_seconds", 39600)))
     dl = d["daily"]
     out = {"ok": True, "place": w["place"],
            "now": {"temp": round(d["current"]["temperature_2m"]), "code": d["current"]["weather_code"], "day": d["current"]["is_day"]},
@@ -446,10 +466,17 @@ def public_state(h, for_host=False, phase=None):
         "access": h.get("access", []) if show_private else [],
         "welcome": g.get("welcome", ""), "rules": [] if guest_room else g.get("rules", []), "howto": g.get("howto", []),
         "local": g.get("local", []), "checkout": {} if guest_room else g.get("checkout", {}), "emergency": g.get("emergency", []),
-        "notes": h.get("notes", []), "phone_url": phone_url(h["id"]),
+        "notes": h.get("notes", []), "phone_url": phone_url(h["id"]), "address": h.get("address"), "whatsapp": h.get("whatsapp"),
+        "brand": settings().get("brand") or {}, "has_climate": has_climate(h),
         "remote_url": remote_url(h) if show_private else None,
         "homes": [{"id": i, "name": (jread(os.path.join(DATA, "homes", i, "home.json"), {}) or {}).get("name", i)} for i in home_ids()],
     }
+
+
+def has_climate(h):
+    """Is there aircon to show? Demo homes pretend; a real home needs an aircon set up and rooms on it."""
+    zones = (h.get("climate") or {}).get("zones")
+    return bool(zones) and bool(h.get("demo") or (settings().get("aircon") or {}).get("kind"))
 
 
 def phone_url(hid):
@@ -491,7 +518,9 @@ def remote_url(h):
 
 
 def tv_ip(h):
-    return os.environ.get("GUEST_TV_IP") or h.get("tv") or settings().get("tv") or (settings().get("profiles") or {}).get("tv")
+    # private.json "tv" keeps the TV's address on this computer and out of git
+    return (os.environ.get("GUEST_TV_IP") or h.get("tv") or settings().get("tv") or private().get("tv")
+            or (settings().get("profiles") or {}).get("tv"))
 
 
 def tv_kind(h):
@@ -535,7 +564,7 @@ def remote_rooms(h):
     """The rooms the guest's remote and agent may change, each with its aircon and lights (or None)."""
     import devices
     clim, rooms = h.get("climate") or {}, {}
-    ac = aircon_for(h)
+    ac = aircon_for(h) if has_climate(h) else {}
     zones = [z for z in (ac.get("zones") or []) if z.get("can_set", True)] if ac.get("connected") else []
     mine = h.get("room") or (zones[0]["name"] if zones else None)   # the guest's own room
     for name in _pick([z["name"] for z in zones], control(h, "aircon"), mine):
@@ -663,7 +692,7 @@ def remote_ctx(h):
     ag = agent_cfg()
     acts = devices.load_actions(os.path.join(DATA, ag.get("actions_file", "actions.json"))) if ag["level"] != "locked" else []
     book = ag.get("booking") or {}
-    return {"tv": tv, "tv_on": bool(apps), "apps": apps, "rooms": remote_rooms(h), "weather": weather(),
+    return {"tv": tv, "tv_on": bool(apps), "apps": apps, "rooms": remote_rooms(h), "weather": weather(h=h),
             "pool": pool_info(h), "speakers": remote_speakers(h),
             "pool_set": lambda on: pool_set(h, on), "speaker_set": lambda rid, act, vol: speaker_set(h, rid, act, vol),
             "local": g.get("local", []), "howto": g.get("howto", []), "notes": h.get("notes", []), "stay": stay,
@@ -689,6 +718,8 @@ def qr_svg(text):
 
 def wifi_qr(w):
     esc = lambda s: re.sub(r"([\\;,:\"])", r"\\\1", s or "")
+    if not w.get("password"):   # an open network: the phone joins with no password asked
+        return "WIFI:T:nopass;S:%s;;" % esc(w.get("ssid"))
     return "WIFI:T:WPA;S:%s;P:%s;;" % (esc(w.get("ssid")), esc(w.get("password")))
 
 
@@ -742,6 +773,8 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/profiles":   # the guest profile picker: what it saw and did lately
             import profiles
             return self.send(200, {"last_app": profiles.state["last"], "log": profiles.state["seen"]})
+        if path == "/api/sanity":   # when the Concierge content was last fetched, and how it went (no content here)
+            return self.send(200, sanity_state)
         if path == "/api/bookings":   # what the booking-email reader found (names, so host only)
             if not self.is_host(qs):
                 return self.send(403, {"error": "host key needed"})
@@ -781,7 +814,7 @@ class H(BaseHTTPRequestHandler):
                 out.update(on=tv.is_on(), front=tv.front() if tv.is_on() else None, log=tv.log)
             return self.send(200, out)
         if path == "/api/weather":
-            return self.send(200, weather())
+            return self.send(200, weather(h=self.home(qs)))
         if path == "/api/aircon":
             h = self.home(qs)
             return self.send(200, aircon_for(h) if h else {"connected": False})
@@ -918,11 +951,30 @@ class H(BaseHTTPRequestHandler):
         self.send(404, {"error": "not found"})
 
 
+def sanity_loop():
+    """Keep each home's Concierge content fresh (sanity_sync.py). A failed fetch keeps the last answer."""
+    import sanity_sync
+    while True:
+        cfg = settings().get("sanity") or {}
+        try:
+            homes = {i: jread(os.path.join(DATA, "homes", i, "home.json"), {}) or {} for i in home_ids()}
+            sanity_state.update(checked=now().isoformat(timespec="minutes"),
+                                homes=sanity_sync.sync(cfg, homes, (settings().get("brand") or {}).get("name", "SOS Stays")))
+        except Exception as e:
+            sanity_state.update(checked=now().isoformat(timespec="minutes"), homes={"error": str(e)})
+        time.sleep(60 * max(1, int(cfg.get("every_min", 10))))
+
+
+sanity_state = {"checked": None, "homes": {}}   # shown at /api/sanity
+
+
 if __name__ == "__main__":
     private()
     import profiles
     profiles.start(settings())   # picks the guest profile in streaming apps on the guest TV
     threading.Thread(target=booking_loop, daemon=True).start()   # guest names from booking emails
+    if (settings().get("sanity") or {}).get("project"):
+        threading.Thread(target=sanity_loop, daemon=True).start()   # the house guide from the Concierge's Sanity
     start_tv_watchers()   # Samsung and LG: open guest-tv when the TV comes on
     srv = ThreadingHTTPServer((os.environ.get("HOST", "0.0.0.0"), PORT), H)
     print("guest-tv on http://%s:%d/tv/  (phone: /p/)" % (local_name(), PORT), flush=True)

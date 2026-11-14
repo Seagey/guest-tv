@@ -6,6 +6,7 @@ data/aircon-ip.json
 data/actions.json
 data/booking-mcp.json
 data/bookings-inbox/
+data/sanity-cache/
 data/homes/*/film.json
 tools/booking-samples/fake_bookings.jsonl
 tools/booking-samples/test-booking-mcp.json

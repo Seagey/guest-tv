@@ -1,13 +1,13 @@
 {
   "id": "app.guesttv.home",
   "version": "1.0.0",
-  "vendor": "guest-tv",
+  "vendor": "SOS Stays",
   "type": "web",
   "main": "boot.html",
-  "title": "Guest TV",
+  "title": "SOS Stays",
   "icon": "icon.png",
   "largeIcon": "largeIcon.png",
-  "bgColor": "#14161d",
+  "bgColor": "#1f2a1e",
   "resolution": "1920x1080",
   "disableBackHistoryAPI": true
 }

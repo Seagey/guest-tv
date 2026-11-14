@@ -136,6 +136,10 @@
       eyebrow = S.host ? "Staying with " + S.host : S.name;
       h1 = guest ? greeting() + ", " + guest : "Welcome";
       sub = st.to ? "Here until " + DAYS[d8(st.to).getDay()] + ". Make yourself at home." : "Make yourself at home.";
+    } else if (st.phase === "open") {
+      eyebrow = S.kind || (S.brand && S.brand.name) || "";
+      h1 = "Welcome to " + S.name;
+      sub = "Make yourself at home." + (S.checkout_time ? " Check-out is by " + t12(S.checkout_time) + "." : "");
     } else if (st.phase === "between" || st.phase === "before") {
       eyebrow = S.kind;
       h1 = "Welcome to " + S.name;
@@ -151,6 +155,9 @@
       sub = dayShort(st.from) + " to " + dayShort(st.to) + " · Night " + st.night + " of " + st.nights;
     }
     $("eyebrow").textContent = eyebrow || "";
+    var logo = $("brand"), src = S.brand && S.brand.logo;
+    if (src && logo.getAttribute("src") !== src) { logo.alt = S.brand.name || ""; logo.src = src; }
+    logo.style.display = src ? "" : "none";
     $("welcome").textContent = h1;
     $("sub").textContent = sub;
     document.body.classList.toggle("between", S.mode !== "guest" && !st.active);
@@ -204,7 +211,7 @@
     } };
     var wifiCard = { id: "wifi", w: 1.7, html: function () {
       return '<div class="k">' + I.wifi + "Wi-Fi</div>" + (S.wifi && S.wifi.ssid ?
-        '<div><div class="small">' + esc(S.wifi.ssid) + '</div><div class="pw">' + esc(S.wifi.password) + '</div><div class="small">OK for a code to join</div></div>'
+        '<div><div class="small">' + esc(S.wifi.ssid) + '</div><div class="pw">' + esc(S.wifi.password || "No password") + '</div><div class="small">OK for a code to join</div></div>'
         : '<div class="small">Ask ' + esc(S.host || "your host") + " for the Wi-Fi</div>");
     } };
     var climateCard = { id: "climate", w: S.mode === "guest" ? 1.8 : 1.4, html: function () {
@@ -228,10 +235,11 @@
     } };
     var checkoutCard = { id: "checkout", w: 1, html: function () {
       return '<div class="k">' + I.checkout + "Check-out</div><div><div class=\"mid\">" + (st.phase === "lastday" ? "Today " : DAYS[d8(st.to).getDay()].slice(0, 3) + " ") + t12(S.checkout_time) +
-        '</div><div class="small">' + ((S.checkout.steps || []).length) + " quick things</div></div>";
+        '</div><div class="small">' + ((S.checkout.steps || []).length ? (S.checkout.steps || []).length + " quick things" : "Thanks for staying") + "</div></div>";
     } };
     var weatherCard = { id: "weather", w: 1.8, html: function () {
-      return '<div class="k">' + I.weather + "Weather</div>" + fcHtml(forecastDays(null, null, 4));
+      var fd = forecastDays(null, null, 4);
+      return '<div class="k">' + I.weather + "Weather</div>" + (fd.length ? fcHtml(fd) : '<div class="small">The forecast shows here when it loads</div>');
     } };
     var eat = S.local.filter(function (c) { return /^eat/i.test(c.category); })[0] || S.local[0];
     var todo = S.local.filter(function (c) { return /things to do|do\b/i.test(c.category); })[0] || S.local[1];
@@ -244,25 +252,33 @@
         '<div class="small">' + places + " local picks</div></div>";
     } };
     var welcomeCard = { id: "about", w: 2, html: function () {
-      return '<div class="k">' + I.stay + esc(S.name) + '</div><div class="small" style="font-size:1.625rem;line-height:2.25rem;color:#fff">' + esc(S.welcome) + "</div>";
+      return '<div class="k">' + I.stay + esc(S.name) + '</div><div class="small clamp" style="font-size:1.625rem;line-height:2.25rem;color:#fff">' + esc(S.welcome) + "</div>";
     } };
 
     var pills = [{ id: "guide", name: S.mode === "guest" ? "How things work" : "House guide", icon: I.guide, note: g ? g + "" : "" }];
     var localPill = { id: "local", name: "Around here", icon: I.local, note: places ? places + "" : "" };
+    var noAC = !S.has_climate && !hasHub;   // no aircon here: the house guide takes that tile
+    if (noAC) { guideCard.w = 1.2; }
     if (S.mode === "guest") {
-      out = places ? [climateCard, wifiCard, weatherCard, localCard] : [climateCard, wifiCard, weatherCard];
+      out = (noAC ? [] : [climateCard]).concat(places ? [wifiCard, weatherCard, localCard] : [wifiCard, weatherCard]);
       climateCard.w = 1.45; wifiCard.w = 1.5; weatherCard.w = 1.55;
+    } else if (st.phase === "open") {
+      wifiCard.w = 1.5; weatherCard.w = 1.6;
+      out = [welcomeCard, wifiCard, noAC ? weatherCard : climateCard].concat(places ? [localCard] : []);
+      if (S.checkout_time) pills.push({ id: "checkout", name: "Check-out", icon: I.checkout, note: t12(S.checkout_time) });
     } else if (!st.active) {
       out = places ? [welcomeCard, weatherCard, localCard] : [welcomeCard, weatherCard];
     } else if (st.phase === "lastday") {
       checkoutCard.lead = true; checkoutCard.w = 1.3;
       if (hasHub) { climateCard = hubCard; }
+      if (noAC) { climateCard = guideCard; }
       out = [checkoutCard, stayCard, wifiCard, climateCard];
       stayCard.w = 2; climateCard.w = hasHub ? 1.6 : 1.2;
       if (places) pills.push(localPill);
     } else {
       stayCard.w = 2; wifiCard.w = 1.45; climateCard.w = 1.2;
       if (hasHub) { climateCard = hubCard; climateCard.w = 1.75; stayCard.w = 1.9; wifiCard.w = 1.35; }
+      if (noAC) { climateCard = guideCard; }
       out = places ? [stayCard, wifiCard, climateCard, localCard] : [stayCard, wifiCard, climateCard];
       pills.push({ id: "checkout", name: "Check-out", icon: I.checkout, note: DAYS[d8(st.to).getDay()].slice(0, 3) + " " + t12(S.checkout_time) });
     }
@@ -308,7 +324,7 @@
           .slice(0, 6).map(function (a) { return { name: a.label, pkg: a.package, banner: "http://tvos.invalid/banner/" + a.package }; });
       } catch (e) { list = []; }
     } else {
-      list = ["Netflix", "YouTube", "Prime Video", "Disney+", "ABC iview", "Spotify"].map(function (n) { return { name: n }; });
+      list = ["Netflix", "YouTube", "Prime Video", "Disney+", "Spotify"].map(function (n) { return { name: n }; });
     }
     APPS = PILLS.map(function (p) { return { name: p.name, sheet: p.id, icon: p.icon, note: p.note }; }).concat(list);
     var box = $("apps");
@@ -368,7 +384,12 @@
       var out = [];
       if ((S.notes || []).length) { out.push({ group: "From " + (S.host || "your host") }); S.notes.forEach(function (x) { out.push({ t: x.title, body: x.body }); }); }
       if (S.rules.length) { out.push({ group: "House rules" }); S.rules.forEach(function (x) { out.push({ t: x.title, body: x.body }); }); }
-      if (S.howto.length) { out.push({ group: "How things work" }); S.howto.forEach(function (x) { out.push({ t: x.title, body: x.body }); }); }
+      var grp = null;
+      S.howto.forEach(function (x) {
+        var g2 = x.group || "How things work";
+        if (g2 !== grp) { grp = g2; out.push({ group: g2 }); }
+        out.push({ t: x.title, body: x.body });
+      });
       return out;
     }
     if (id === "hub") {
@@ -427,6 +448,7 @@
     navEl.scrollTop = fo ? Math.max(0, fo.offsetTop - navEl.offsetTop - navEl.clientHeight / 2 + fo.offsetHeight / 2) : 0;
     $("sheet-main").innerHTML = sheetMain();
     $("sheet-main").classList.toggle("mid", sh.id === "climate" || sh.id === "wifi" || sh.id === "checkout");
+    $("sheet").classList.toggle("wide-nav", sh.id === "guide");   // questions from the Concierge need the room
     var q = $("sheet-main").querySelectorAll("[data-qr]");
     for (var k = 0; k < q.length; k++) loadSvg(q[k], q[k].getAttribute("data-qr"));
     if (sh.id === "hub") { $("sheet-hint").innerHTML = hubHint(); return; }
@@ -451,16 +473,17 @@
     if (sh.id === "wifi") {
       if (!S.wifi || !S.wifi.ssid) return '<div class="panel glass"><p class="lede">Ask ' + esc(S.host || "your host") + " for the Wi-Fi details.</p></div>";
       return '<div class="panel glass wifi-big"><div class="qr" data-qr="wifi"></div><div><div class="name">Network</div><div class="val">' + esc(S.wifi.ssid) +
-        '</div><div class="name">Password</div><div class="val">' + esc(S.wifi.password) + "</div></div></div>" +
+        '</div><div class="name">Password</div><div class="val">' + esc(S.wifi.password || "None needed") + "</div></div></div>" +
         '<div class="panel glass" style="display:flex;gap:2rem;align-items:center"><div class="qr" data-qr="qr" style="width:9rem;height:9rem;border-radius:1rem;overflow:hidden;background:#fff;flex:none"></div>' +
-        '<div><h3>On your phone too</h3><p>Once you are on the Wi-Fi, this code opens the house guide, climate and local tips on your phone. Nothing to install.</p></div></div>';
+        '<div><h3>On your phone too</h3><p>Once you are on the Wi-Fi, this code opens the house guide and local tips on your phone. Nothing to install.</p></div></div>';
     }
     if (sh.id === "climate") return zonesHtml();
     if (sh.id === "hub") return hubMain();
     if (sh.id === "checkout") {
       var steps = (S.checkout.steps || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
-      return '<div class="panel glass"><p class="meta">' + (st.phase === "lastday" ? "Today" : st.to ? DAYS[d8(st.to).getDay()] : "") + '</p><h3>Check-out by ' + t12(S.checkout_time) + "</h3><ol>" + steps + "</ol></div>" +
-        '<div class="panel glass"><p class="lede">Safe travels' + (st.guest ? ", " + esc(st.guest) : "") + ". We hope you come back." + (S.host ? " " + esc(S.host) : "") + "</p></div>";
+      var day = st.phase === "lastday" ? "Today" : st.to ? DAYS[d8(st.to).getDay()] : "";
+      return '<div class="panel glass">' + (day ? '<p class="meta">' + day + "</p>" : "") + '<h3>Check-out by ' + t12(S.checkout_time) + "</h3>" + (steps ? "<ol>" + steps + "</ol>" : "") + "</div>" +
+        '<div class="panel glass"><p class="lede">Safe travels' + (st.guest ? ", " + esc(st.guest) : "") + ". We hope you come back." + "</p>" + (S.host ? '<p class="meta">' + esc(S.host) + "</p>" : "") + "</div>";
     }
     if (sh.id === "weather") {
       return '<div class="panel glass"><h3>' + esc(WX && WX.place || "") + '</h3><p class="meta">The next few days</p>' + fcHtml(forecastDays(null, null, 7), true) + "</div>";
@@ -475,7 +498,7 @@
         }).join("") + "</div></div>";
       }
       return (sh.sel === 0 ? photo("area", "Around " + S.name) : "") + '<div class="panel glass places">' + n.items.map(function (p) {
-        return '<div class="pl"><b>' + esc(p.name) + "</b><p>" + esc(p.note || "") + (p.distance ? " <em>" + esc(p.distance) + "</em>" : "") + "</p></div>";
+        return '<div class="pl"><b>' + esc(p.name) + "</b><p>" + esc(p.note || "") + (p.distance ? " <em>" + esc(p.distance) + "</em>" : "") + (p.phone ? " <em>" + esc(p.phone) + "</em>" : "") + "</p></div>";
       }).join("") + "</div>";
     }
     if (sh.id === "stay" || sh.id === "about") {
@@ -681,7 +704,7 @@
     });
   }
   function refreshWeather() {
-    return fetch("/api/weather").then(function (r) { return r.json(); }).then(function (w) {
+    return fetch("/api/weather?home=" + encodeURIComponent(HOME)).then(function (r) { return r.json(); }).then(function (w) {
       WX = w; dateLine();
       if (S && !sheet) { drawCards(); drawApps(); }
     });

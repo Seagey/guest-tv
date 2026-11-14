@@ -121,6 +121,9 @@ def stage(brand, url, home_id):
     for name in os.listdir(os.path.join(APPS_DIR, brand)):
         files[name] = open(os.path.join(APPS_DIR, brand, name), "rb").read()
     files["boot.html"] = open(os.path.join(APPS_DIR, "boot.html"), "rb").read()
+    logo = os.path.join(ROOT, "web", "brand", "sos-stays-logo-light.png")   # on the wait screen, before the computer answers
+    if os.path.isfile(logo):
+        files["logo.png"] = open(logo, "rb").read()
     files["settings.js"] = ("window.GUEST_TV = %s;\n" % json.dumps({"url": url, "home": home_id, "brand": brand})).encode()
     return files
 

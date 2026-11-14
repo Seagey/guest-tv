@@ -1,28 +1,35 @@
-/* guest-tv, the TV screen. Designed at 1920x1080 like couch-tv: 1rem = 16px at that width, so it
+/* guest-tv for SOS Stays, the TV screen. Brand: the logo's sage green (#4a5d48), the Concierge's
+   cream (#fafaf8) and its Playfair Display headings over Inter.
+   guest-tv, the TV screen. Designed at 1920x1080 like couch-tv: 1rem = 16px at that width, so it
    scales with the TV's real CSS viewport. tvOS numbers: safe area 60 top and bottom, 80 at the sides.
    Text never under 23px (1.4375rem) because it is read from the couch. */
 
 @font-face { font-family: "Inter"; font-weight: 100 900; font-display: block; src: url(fonts/inter-latin-wght-normal.woff2) format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-weight: 600; font-display: block; src: url(fonts/playfair-display-latin-600.woff2) format("woff2"); }
 @font-face { font-family: "Antonio"; font-weight: 300; font-display: block; src: url(fonts/antonio-latin-300.woff2) format("woff2"); }
 
 :root {
-  --text: #f7f6f3;
-  --text-2: rgba(247, 246, 243, 0.72);
-  --text-3: rgba(247, 246, 243, 0.5);
+  --text: #fafaf8;
+  --text-2: rgba(250, 250, 248, 0.74);
+  --text-3: rgba(250, 250, 248, 0.52);
+  --brand: #4a5d48;
+  --brand-deep: #1f2a1e;
+  --brand-soft: #c9d8c2;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
   --safe-x: 5rem;
   --safe-y: 3.75rem;
-  --glass: rgba(22, 22, 28, 0.34);
-  --glass-strong: rgba(18, 18, 24, 0.58);
+  --glass: rgba(24, 32, 23, 0.4);
+  --glass-strong: rgba(20, 27, 19, 0.62);
   --rim: rgba(255, 255, 255, 0.16);
-  --warm: #ffd89a;
-  --cool: #9fd8ff;
+  --warm: #e6d3a3;
+  --cool: #b9d6c4;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: calc(100vw / 120); background: #0b0b0e; color: var(--text); }
+html { font-size: calc(100vw / 120); background: #141a13; color: var(--text); }
 body {
-  width: 100vw; height: 100vh; overflow: hidden; background: #0b0b0e;
+  width: 100vw; height: 100vh; overflow: hidden; background: #141a13;
   font-family: "Inter", system-ui, sans-serif; font-weight: 450; letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased; cursor: none; user-select: none; -webkit-user-select: none;
 }
@@ -67,12 +74,16 @@ body.mouse { cursor: default; }
 /* ---------- top ---------- */
 .top {
   position: fixed; top: var(--safe-y); left: var(--safe-x); right: var(--safe-x); z-index: 3;
-  display: flex; justify-content: flex-end; align-items: flex-start;
+  display: flex; justify-content: space-between; align-items: flex-start;
 }
+/* the SOS Stays logo, top left, cream on the photo */
+.brand { height: 7.5rem; width: auto; filter: drop-shadow(0 0.125rem 1rem rgba(0, 0, 0, 0.35)); transition: opacity 900ms var(--ease); }
+.top .phone-chip { margin-left: auto; }
+.rest .brand { opacity: 0.85; }
 /* the welcome sits low on the left, just above the cards, like a title on Apple TV */
 .hello { position: fixed; left: var(--safe-x); bottom: 26.5rem; max-width: 70rem; text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.45); }
 .eyebrow { font-size: 1.4375rem; line-height: 1.75rem; font-weight: 640; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
-.hello h1 { margin-top: 0.5rem; font-size: 3.5rem; line-height: 4rem; font-weight: 680; letter-spacing: -0.025em; }
+.hello h1 { margin-top: 0.5rem; font-family: var(--serif); font-size: 3.75rem; line-height: 4.5rem; font-weight: 600; letter-spacing: -0.01em; }
 .hello .sub { margin-top: 0.5rem; font-size: 1.75rem; line-height: 2.25rem; color: rgba(255, 255, 255, 0.86); }
 .phone-chip { display: flex; align-items: flex-start; gap: 1rem; padding: 0.75rem 0.875rem; border-radius: 1.5rem; }
 .phone-chip .qr { width: 6.25rem; height: 6.25rem; border-radius: 0.75rem; overflow: hidden; background: #fff; }
@@ -109,11 +120,12 @@ body.mouse { cursor: default; }
 .card.photo { background-size: cover; background-position: center; }
 .card .pick { font-size: 1.75rem; line-height: 2.25rem; font-weight: 640; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .pick i { font-style: normal; display: inline-block; min-width: 3.5rem; font-size: 1.4375rem; font-weight: 600; color: var(--warm); }
-.card.lead { background: rgba(255, 244, 228, 0.16); }
+.card.lead { background: rgba(201, 216, 194, 0.2); }
+.card .clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
 .card.focus {
   transform: translateY(-0.5rem) scale(1.04); z-index: 2;
-  background: rgba(255, 255, 255, 0.24);
-  box-shadow: inset 0 0 0 0.1875rem rgba(255, 255, 255, 0.9), 0 2rem 3.5rem rgba(0, 0, 0, 0.5);
+  background: rgba(74, 93, 72, 0.62);
+  box-shadow: inset 0 0 0 0.1875rem rgba(250, 250, 248, 0.92), 0 2rem 3.5rem rgba(0, 0, 0, 0.5);
 }
 .card.focus::after {
   content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
@@ -145,7 +157,7 @@ body.mouse { cursor: default; }
 }
 .app.banner { padding: 0; width: 8rem; min-width: 0; height: 4.5rem; border-radius: 0.75rem; overflow: hidden; }
 .app.banner img { width: 100%; height: 100%; object-fit: cover; }
-.app.focus { background: #fff; color: #111; transform: scale(1.1); box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4); }
+.app.focus { background: var(--text); color: var(--brand-deep); transform: scale(1.1); box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4); }
 .app.pill { gap: 0.75rem; padding: 0 1.75rem 0 1.375rem; }
 .app.pill svg { width: 1.75rem; height: 1.75rem; flex: none; }
 .app.pill i { font-style: normal; font-weight: 520; color: var(--text-3); margin-left: 0.125rem; }
@@ -156,7 +168,7 @@ body.mouse { cursor: default; }
 /* ---------- sheet ---------- */
 .sheet {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 10; opacity: 0; pointer-events: none;
-  background: rgba(7, 7, 10, 0.84); -webkit-backdrop-filter: blur(3rem) saturate(120%); backdrop-filter: blur(3rem) saturate(120%);
+  background: rgba(16, 22, 15, 0.88); -webkit-backdrop-filter: blur(3rem) saturate(120%); backdrop-filter: blur(3rem) saturate(120%);
   transition: opacity 320ms var(--ease);
 }
 /* a menu open: the home fades away and the photo goes dark, so only the menu is on screen */
@@ -176,14 +188,17 @@ body.sheeted .top, body.sheeted .home, body.sheeted .date, body.sheeted .gclock 
 .sheet-nav { width: 26rem; flex: none; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.5rem; min-height: 0; overflow: hidden; }
 .sheet-nav > * { flex: none; }
 .sheet-nav { -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent); mask-image: linear-gradient(180deg, #000 88%, transparent); }
-.sheet-nav h2 { font-size: 3rem; line-height: 3.5rem; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 1.5rem; }
+.sheet-nav h2 { font-family: var(--serif); font-size: 3rem; line-height: 3.75rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 1.5rem; }
 .sheet-nav .item {
   font-size: 1.75rem; line-height: 2.25rem; font-weight: 560; padding: 0.875rem 1.25rem; border-radius: 1rem; color: var(--text-2);
   transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
 }
-.sheet-nav .item.sel { color: #fff; background: rgba(255, 255, 255, 0.1); }
-.sheet-nav .item.focus { background: #fff; color: #111; transform: scale(1.03); }
-.sheet-nav .group { margin-top: 1rem; font-size: 1.4375rem; font-weight: 640; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); padding: 0 1.25rem; }
+.sheet-nav .item { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.sheet.wide-nav .sheet-nav { width: 36rem; }
+.sheet.wide-nav .sheet-nav .item { font-size: 1.625rem; line-height: 2.125rem; padding: 0.75rem 1.25rem; }
+.sheet-nav .item.sel { color: #fff; background: rgba(201, 216, 194, 0.16); }
+.sheet-nav .item.focus { background: var(--text); color: var(--brand-deep); transform: scale(1.03); }
+.sheet-nav .group { margin-top: 1rem; font-size: 1.4375rem; font-weight: 640; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-soft); padding: 0 1.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sheet-main { flex: 1; min-width: 0; overflow: hidden; }
 .sheet-main.mid { display: flex; flex-direction: column; justify-content: center; padding-bottom: 4rem; }
 .sheet-hint { position: absolute; left: 0; right: 0; bottom: 3rem; text-align: center; font-size: 1.4375rem; color: var(--text-3); }
@@ -191,7 +206,7 @@ body.sheeted .top, body.sheeted .home, body.sheeted .date, body.sheeted .gclock 
 
 .panel { border-radius: 2rem; padding: 2.5rem 2.75rem; }
 .panel + .panel { margin-top: 1.5rem; }
-.panel h3 { font-size: 2.5rem; line-height: 3rem; font-weight: 680; letter-spacing: -0.02em; }
+.panel h3 { font-family: var(--serif); font-size: 2.5rem; line-height: 3.25rem; font-weight: 600; letter-spacing: -0.005em; }
 .panel p, .panel li { font-size: 1.875rem; line-height: 2.625rem; color: rgba(255, 255, 255, 0.88); }
 .panel .lede { font-size: 2.125rem; line-height: 3rem; color: #fff; }
 .panel .meta { margin-top: 0.75rem; font-size: 1.5rem; line-height: 2rem; color: var(--text-2); }
@@ -284,6 +299,7 @@ body.sheeted .top, body.sheeted .home, body.sheeted .date, body.sheeted .gclock 
 
 /* between stays: a calm screen, nothing private */
 .between .phone-chip { display: none; }
+body.sheeted .brand { opacity: 0; }
 
 /* ---------- older TV browsers ----------
    html.old (set in tv.js): no CSS grid and no gap between flex items, seen in the Chrome 55 era
@@ -306,7 +322,7 @@ body.sheeted .top, body.sheeted .home, body.sheeted .date, body.sheeted .gclock 
 .old .gclock .fill { filter: none; }
 /* no blur behind the glass: a darker tint keeps the words readable over the photo */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass { background: rgba(18, 18, 24, 0.58); }
-  .sheet { background: rgba(9, 9, 12, 0.95); }
+  .glass { background: rgba(20, 27, 19, 0.66); }
+  .sheet { background: rgba(14, 19, 13, 0.96); }
   .sheet .glass { background: rgba(255, 255, 255, 0.07); }
 }
