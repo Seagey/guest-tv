@@ -623,4 +623,8 @@ the TV: the couch-tv TV app (Google TV) or guest-tv's own app or the TV's browse
 - Weather: Open-Meteo.
 - The TV app and the glass look: [couch-tv](https://github.com/Seagey/couch-tv).
 
+## Shout me a coffee
+
+guest-tv is free. If it made your day a bit easier and you'd like to say thanks, you can [shout me a coffee](https://buy.stripe.com/3cIdR8deM30bexRaYl6Vq0s), any amount you like.
+
 MIT licence, see `LICENSE`.
